@@ -1,0 +1,43 @@
+{
+  "model_name": "OccurrenceModel",
+  "monitor_name": "rule_based",
+  "monitor_mode": "max",
+  "best_epoch": 0,
+  "best_metric": NaN,
+  "best_train_loss": 0.0,
+  "best_val_loss": 0.0,
+  "final_train_loss": 0.0,
+  "final_val_loss": 0.0,
+  "best_train_metrics": {
+    "count_exact_acc": 9.837963266505135,
+    "count_mae": 5.51736127005683,
+    "weekly_total_mae": 10.96759287516276,
+    "presence_f1": 97.46887322957035
+  },
+  "best_val_metrics": {
+    "count_exact_acc": 8.680555721124014,
+    "count_mae": 5.034722328186035,
+    "weekly_total_mae": 11.611111323038736,
+    "presence_f1": 98.35455200576507
+  },
+  "final_train_metrics": {
+    "count_exact_acc": 9.837963266505135,
+    "count_mae": 5.51736127005683,
+    "weekly_total_mae": 10.96759287516276,
+    "presence_f1": 97.46887322957035
+  },
+  "final_val_metrics": {
+    "count_exact_acc": 8.680555721124014,
+    "count_mae": 5.034722328186035,
+    "weekly_total_mae": 11.611111323038736,
+    "presence_f1": 98.35455200576507
+  },
+  "history": [],
+  "extra": {
+    "data_path": "/home/miguel/Escritorio/prediction_deliverance/project_06_v2/nexus_schedule_5years.json",
+    "train_ratio": 0.8,
+    "device": "cuda",
+    "occurrence_model_kind": "structured_lag4",
+    "occurrence_lag_weeks": 4
+  }
+}
