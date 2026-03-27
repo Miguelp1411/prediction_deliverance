@@ -1,0 +1,11 @@
+{
+  "generated_at_utc": "2026-03-16T13:19:25Z",
+  "data_path": "/home/miguel/Escritorio/Prediction/aux_proyecto/proy2_patched/aux_database.json",
+  "checkpoint_dir": "/home/miguel/Escritorio/Prediction/aux_proyecto/proy2_patched/checkpoints_2",
+  "output_path": "/home/miguel/Escritorio/Prediction/aux_proyecto/proy2_patched/predicted_next_week.json",
+  "prediction_week_start_utc": "2028-01-03T00:00:00.000Z",
+  "repair_enabled": false,
+  "bin_minutes": 5,
+  "total_tasks": 78,
+  "sanity_warnings": []
+}
