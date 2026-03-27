@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import torch
+torch.backends.cudnn.enabled = False
 from torch.utils.data import DataLoader
 
 from config import (
@@ -171,6 +172,9 @@ def build_occurrence_model(prepared, occ_train: OccurrenceDataset, device: torch
 def main():
     set_seed(SEED)
     device = resolve_device()
+    print(f"\nDevice de entrenamiento: {device}")
+    if device.type == "cuda":
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
 
     print("\n[1/6] Cargando datos...", flush=True)
     df = load_tasks_dataframe(DATA_PATH, timezone=TIMEZONE)
