@@ -1,0 +1,6 @@
+torch
+pandas==2.3.3
+numpy==2.2.6
+scipy==1.15.3
+networkx==3.4.2
+sympy==1.13.1

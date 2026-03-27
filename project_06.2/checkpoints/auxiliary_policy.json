@@ -1,0 +1,80 @@
+{
+  "use_auxiliary": true,
+  "use_aux_count": true,
+  "use_aux_duration": false,
+  "use_aux_time": false,
+  "metrics": {
+    "weeks_evaluated": 8,
+    "base": {
+      "task_accuracy": 0.7834200683037893,
+      "day_exact_accuracy": 0.778612375996097,
+      "day_close_accuracy_1d": 0.7834200683037893,
+      "time_exact_accuracy": 0.778612375996097,
+      "time_close_accuracy_5m": 0.778612375996097,
+      "time_close_accuracy_10m": 0.778612375996097,
+      "start_mae_minutes": 8.181818181818182,
+      "start_mae_when_day_correct_minutes": 0.0,
+      "duration_close_accuracy": 0.7834200683037893
+    },
+    "selected": {
+      "task_accuracy": 0.9523601398601399,
+      "day_exact_accuracy": 0.9263091559603187,
+      "day_close_accuracy_1d": 0.9475524475524475,
+      "time_exact_accuracy": 0.8464486095300049,
+      "time_close_accuracy_5m": 0.8580765165067491,
+      "time_close_accuracy_10m": 0.8753862416653115,
+      "start_mae_minutes": 46.13344141323792,
+      "start_mae_when_day_correct_minutes": 11.421304982280592,
+      "duration_close_accuracy": 0.9523601398601399
+    },
+    "audit": {
+      "base": {
+        "task_accuracy": 0.7834200683037893,
+        "day_exact_accuracy": 0.778612375996097,
+        "day_close_accuracy_1d": 0.7834200683037893,
+        "time_exact_accuracy": 0.778612375996097,
+        "time_close_accuracy_5m": 0.778612375996097,
+        "time_close_accuracy_10m": 0.778612375996097,
+        "start_mae_minutes": 8.181818181818182,
+        "start_mae_when_day_correct_minutes": 0.0,
+        "duration_close_accuracy": 0.7834200683037893
+      },
+      "candidate_count": {
+        "task_accuracy": 0.9523601398601399,
+        "day_exact_accuracy": 0.9263091559603187,
+        "day_close_accuracy_1d": 0.9475524475524475,
+        "time_exact_accuracy": 0.8464486095300049,
+        "time_close_accuracy_5m": 0.8580765165067491,
+        "time_close_accuracy_10m": 0.8753862416653115,
+        "start_mae_minutes": 46.13344141323792,
+        "start_mae_when_day_correct_minutes": 11.421304982280592,
+        "duration_close_accuracy": 0.9523601398601399
+      },
+      "accepted_count": true,
+      "candidate_duration": {
+        "task_accuracy": 0.9523601398601399,
+        "day_exact_accuracy": 0.9263091559603187,
+        "day_close_accuracy_1d": 0.9475524475524475,
+        "time_exact_accuracy": 0.8464486095300049,
+        "time_close_accuracy_5m": 0.8580765165067491,
+        "time_close_accuracy_10m": 0.8753862416653115,
+        "start_mae_minutes": 46.13344141323792,
+        "start_mae_when_day_correct_minutes": 11.421304982280592,
+        "duration_close_accuracy": 0.9409965034965035
+      },
+      "accepted_duration": false,
+      "candidate_time": {
+        "task_accuracy": 0.9523601398601399,
+        "day_exact_accuracy": 0.9263091559603187,
+        "day_close_accuracy_1d": 0.9475524475524475,
+        "time_exact_accuracy": 0.8464486095300049,
+        "time_close_accuracy_5m": 0.8580765165067491,
+        "time_close_accuracy_10m": 0.8753862416653115,
+        "start_mae_minutes": 46.13344141323792,
+        "start_mae_when_day_correct_minutes": 11.421304982280592,
+        "duration_close_accuracy": 0.9523601398601399
+      },
+      "accepted_time": false
+    }
+  }
+}

@@ -1,4 +1,0 @@
-numpy
-pandas
-scipy>=1.10.0
-torch

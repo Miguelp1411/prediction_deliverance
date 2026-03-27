@@ -1,0 +1,101 @@
+step,task_name,día,hora,duración_mins
+1,Limpiar polvo dormitorio 3,Lunes,08:00,20.2
+2,Limpiar polvo dormitorio 3,Lunes,08:00,19.6
+3,Fregar suelo oficina,Lunes,08:00,19.0
+4,Fregar suelo dormitorio principal,Lunes,08:00,18.7
+5,Fregar suelo dormitorio principal,Lunes,08:00,18.3
+6,Fregar suelo dormitorio principal,Lunes,08:00,18.3
+7,Fregar suelo dormitorio principal,Lunes,08:00,18.4
+8,Aspirar alfombra salón,Lunes,08:00,18.7
+9,Aspirar alfombra salón,Lunes,08:00,17.7
+10,Fregar suelo dormitorio principal,Lunes,08:00,16.9
+11,Fregar suelo dormitorio principal,Martes,08:00,18.1
+12,Limpiar estantes despensa,Martes,08:30,21.0
+13,Ordenar lavandería,Martes,08:30,21.3
+14,Ordenar lavandería,Martes,08:30,21.6
+15,Ordenar lavandería,Martes,08:30,21.6
+16,Ordenar lavandería,Martes,08:30,21.3
+17,Ordenar lavandería,Martes,08:30,21.2
+18,Ordenar lavandería,Martes,08:30,21.0
+19,Ordenar lavandería,Martes,08:15,20.4
+20,Limpiar entrada,Martes,08:30,19.7
+21,Aspirar felpudo entrada,Martes,08:30,22.8
+22,Aspirar felpudo entrada,Martes,08:30,24.4
+23,Aspirar felpudo entrada,Martes,08:30,26.2
+24,Aspirar felpudo entrada,Martes,12:30,28.0
+25,Aspirar felpudo entrada,Martes,08:30,31.6
+26,Aspirar felpudo entrada,Martes,08:30,30.8
+27,Aspirar felpudo entrada,Martes,08:30,29.7
+28,Aspirar felpudo entrada,Martes,08:30,28.8
+29,Aspirar felpudo entrada,Martes,08:30,28.2
+30,Limpiar entrada,Martes,12:30,28.4
+31,Aspirar felpudo entrada,Martes,12:30,31.8
+32,Aspirar felpudo entrada,Martes,12:30,35.4
+33,Aspirar felpudo entrada,Miércoles,12:30,37.4
+34,Aspirar felpudo entrada,Miércoles,12:30,38.4
+35,Desempolvar muebles salón,Miércoles,12:30,39.4
+36,Ordenar lavandería,Miércoles,08:30,41.6
+37,Ordenar lavandería,Miércoles,08:45,36.2
+38,Ordenar lavandería,Miércoles,08:30,33.6
+39,Ordenar lavandería,Miércoles,08:30,31.1
+40,Ordenar garaje,Miércoles,08:30,29.2
+41,Ordenar garaje,Miércoles,08:30,27.6
+42,Ordenar garaje,Miércoles,08:30,27.2
+43,Desempolvar muebles salón,Miércoles,08:30,27.7
+44,Aspirar felpudo entrada,Miércoles,08:30,29.4
+45,Aspirar felpudo entrada,Miércoles,08:30,31.0
+46,Limpiar mesa comedor,Miércoles,08:30,31.4
+47,Fregar suelo salón,Miércoles,08:30,29.9
+48,Fregar suelo salón,Miércoles,08:30,30.5
+49,Fregar suelo salón,Miércoles,08:30,30.5
+50,Limpiar mesa comedor,Miércoles,08:30,30.0
+51,Ordenar lavandería,Miércoles,08:30,29.0
+52,Ordenar lavandería,Miércoles,17:30,27.5
+53,Ordenar lavandería,Miércoles,17:30,25.4
+54,Ordenar lavandería,Miércoles,17:30,22.6
+55,Ordenar lavandería,Miércoles,17:30,19.1
+56,Fregar suelo salón,Viernes,17:45,16.5
+57,Ordenar lavandería,Jueves,17:45,16.0
+58,Ordenar lavandería,Jueves,17:45,14.4
+59,Ordenar lavandería,Jueves,17:45,13.6
+60,Ordenar lavandería,Jueves,17:45,13.0
+61,Limpiar muebles terraza,Jueves,17:45,12.3
+62,Limpiar polvo pasillo,Jueves,17:30,13.0
+63,Limpiar polvo pasillo,Jueves,17:30,12.3
+64,Limpiar polvo pasillo,Jueves,17:30,11.4
+65,Limpiar polvo pasillo,Jueves,17:30,11.0
+66,Limpiar polvo pasillo,Jueves,17:15,11.5
+67,Limpiar polvo pasillo,Jueves,17:15,13.8
+68,Limpiar polvo pasillo,Jueves,17:15,16.0
+69,Limpiar polvo pasillo,Jueves,17:15,17.9
+70,Limpiar polvo pasillo,Jueves,17:15,19.1
+71,Limpiar polvo pasillo,Sábado,17:15,19.6
+72,Limpiar muebles terraza,Sábado,17:15,20.4
+73,Fregar suelo baño principal,Sábado,10:15,20.6
+74,Limpiar muebles terraza,Sábado,08:15,20.8
+75,Fregar suelo dormitorio principal,Sábado,08:15,22.7
+76,Fregar suelo dormitorio principal,Sábado,08:15,22.4
+77,Fregar suelo dormitorio principal,Sábado,08:15,21.7
+78,Limpiar polvo pasillo,Sábado,08:15,21.1
+79,Aspirar dormitorio principal,Sábado,08:15,22.3
+80,Aspirar dormitorio principal,Sábado,08:15,24.6
+81,Aspirar dormitorio principal,Sábado,08:15,27.4
+82,Ordenar lavandería,Sábado,08:15,29.7
+83,Ordenar lavandería,Sábado,08:15,30.2
+84,Limpiar polvo pasillo,Domingo,08:15,29.3
+85,Limpiar mesa comedor,Sábado,08:15,26.5
+86,Limpiar mesa comedor,Sábado,08:15,24.9
+87,Aspirar dormitorio principal,Sábado,08:15,23.4
+88,Aspirar dormitorio principal,Sábado,08:15,23.1
+89,Aspirar dormitorio principal,Sábado,08:15,23.7
+90,Fregar suelo baño secundario,Sábado,08:15,24.9
+91,Fregar suelo baño secundario,Sábado,08:15,26.2
+92,Fregar suelo baño secundario,Sábado,08:15,27.4
+93,Fregar suelo baño secundario,Sábado,08:15,28.2
+94,Fregar suelo baño secundario,Sábado,08:15,28.5
+95,Aspirar dormitorio principal,Sábado,08:15,28.4
+96,Limpiar polvo pasillo,Sábado,08:15,29.4
+97,Aspirar felpudo entrada,Sábado,08:15,30.0
+98,Aspirar felpudo entrada,Sábado,08:15,30.6
+99,Aspirar felpudo entrada,Sábado,08:15,31.0
+100,Aspirar felpudo entrada,Sábado,08:15,30.8
