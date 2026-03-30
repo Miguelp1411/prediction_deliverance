@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import json
 import random
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 import torch
-torch.backends.cudnn.enabled = False
 from torch.utils.data import DataLoader
+
+torch.backends.cudnn.enabled = False
 
 from config import (
     CAP_INFERENCE_SCOPE,
@@ -21,6 +24,8 @@ from config import (
     OCC_LAG_WEEKS,
     OCC_NUM_LAYERS,
     OCCURRENCE_MODEL_KIND,
+    PREDICTION_USE_REPAIR,
+    REPORTS_DIR,
     SEED,
     TASK_EMBED_DIM,
     TEMPORAL_COUNT_BLEND_TARGET_WEIGHT,
@@ -52,6 +57,44 @@ from training.metrics import occurrence_metrics, temporal_metrics
 from utils.serialization import save_checkpoint
 
 
+OCCURRENCE_REPORT_KEYS = (
+    'count_exact_acc',
+    'count_mae',
+    'weekly_total_mae',
+    'presence_f1',
+)
+
+TEMPORAL_REPORT_KEYS = (
+    'start_exact_acc',
+    'start_tol_acc_5m',
+    'start_tol_acc_10m',
+    'start_mae_minutes',
+    'duration_mae_minutes',
+)
+
+ENSEMBLE_REPORT_KEYS = (
+    'task_precision',
+    'task_recall',
+    'task_f1',
+    'time_exact_accuracy',
+    'time_close_accuracy_5m',
+    'time_close_accuracy_10m',
+    'duration_close_accuracy',
+    'start_mae_minutes',
+    'overlap_same_device_count',
+)
+
+PERCENTAGE_REPORT_KEYS = {
+    'task_precision',
+    'task_recall',
+    'task_f1',
+    'time_exact_accuracy',
+    'time_close_accuracy_5m',
+    'time_close_accuracy_10m',
+    'duration_close_accuracy',
+}
+
+
 def set_seed(seed: int):
     random.seed(seed)
     np.random.seed(seed)
@@ -75,51 +118,149 @@ class ZeroLoss(torch.nn.Module):
         return torch.zeros((), dtype=torch.float32, device=device)
 
 
-def _format_metrics(metrics: dict[str, float]) -> str:
-    return ' | '.join(f'{k}={v:.3f}' for k, v in metrics.items()) if metrics else '-'
+def _round_float(value: float, digits: int = 4) -> float:
+    return round(float(value), digits)
 
 
-def print_training_summary(model_name: str, state):
-    print(f'\nResumen final de entrenamiento — {model_name}')
+def _select_metrics(metrics: dict[str, float], keys: tuple[str, ...]) -> dict[str, float]:
+    selected: dict[str, float] = {}
+    for key in keys:
+        if key in metrics:
+            selected[key] = _round_float(metrics[key])
+    return selected
+
+
+def _build_per_task_report(per_task_stats: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
+    report: dict[str, dict[str, float]] = {}
+    for task_name, stats in sorted(per_task_stats.items()):
+        report[task_name] = {
+            'total': _round_float(stats.get('total', 0.0)),
+            'task_accuracy': _round_float(stats.get('task_accuracy', 0.0) * 100.0),
+            'time_exact_accuracy': _round_float(stats.get('time_exact_accuracy', 0.0) * 100.0),
+        }
+    return report
+
+
+def _to_json_ready(value):
+    if isinstance(value, dict):
+        return {str(k): _to_json_ready(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_to_json_ready(v) for v in value]
+    if isinstance(value, tuple):
+        return [_to_json_ready(v) for v in value]
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
+def save_final_report(report: dict, path: str | Path):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('w', encoding='utf-8') as fh:
+        json.dump(_to_json_ready(report), fh, ensure_ascii=False, indent=2)
+
+
+def print_final_report(report: dict):
+    print('\nReporte final de entrenamiento')
     print('-' * 50)
-    print(f'Mejor epoch         : {state.best_epoch}')
-    print(f'Monitor             : {state.monitor_name} ({state.monitor_mode})')
-    print(f'Mejor monitor       : {state.best_metric:.4f}')
-    print(f'Best train_loss     : {state.best_train_loss:.4f}')
-    print(f'Best val_loss       : {state.best_val_loss:.4f}')
-    print(f'Último train_loss   : {state.final_train_loss:.4f}')
-    print(f'Último val_loss     : {state.final_val_loss:.4f}')
-    print(f'Best train metrics  : {_format_metrics(state.best_train_metrics)}')
-    print(f'Best val metrics    : {_format_metrics(state.best_val_metrics)}')
-    print(f'Último train metrics: {_format_metrics(state.final_train_metrics)}')
-    print(f'Último val metrics  : {_format_metrics(state.final_val_metrics)}')
 
+    occurrence = report['occurrence']
+    print(f"OccurrenceModel ({occurrence['type']})")
+    for key, value in occurrence['metrics'].items():
+        suffix = '%' if 'acc' in key or key.endswith('f1') else ''
+        print(f'  {key:<26} {value:.4f}{suffix}')
 
-def print_loader_summary(title: str, loss: float, metrics: dict[str, float]):
-    print(f'  {title}: loss={loss:.4f}')
-    if metrics:
-        print(f'    {_format_metrics(metrics)}')
+    temporal = report['temporal']
+    print('\nTemporalModel')
+    for key, value in temporal['metrics'].items():
+        unit = ' min' if 'mae_minutes' in key else ('%' if 'acc' in key else '')
+        print(f'  {key:<26} {value:.4f}{unit}')
+
+    ensemble = report['ensemble']
+    print('\nEnsamblado final')
+    for key, value in ensemble['metrics'].items():
+        if key in PERCENTAGE_REPORT_KEYS:
+            print(f'  {key:<26} {value:.4f}%')
+        elif key == 'start_mae_minutes':
+            print(f'  {key:<26} {value:.4f} min')
+        else:
+            print(f'  {key:<26} {value:.4f}')
+
+    print(f"\nReporte guardado en: {report['report_path']}")
 
 
 def aggregate_weekly_stats(prepared, week_indices, occurrence_model, temporal_model, device, use_repair: bool = False):
     if not week_indices:
         return {}
-    stats_list = []
-    per_task_accumulator: dict[str, list[tuple[float, float]]] = {}
+
+    totals = {
+        'total_tasks': 0.0,
+        'predicted_tasks': 0.0,
+        'correct_tasks': 0.0,
+        'time_exact_count': 0.0,
+        'time_close_5m_count': 0.0,
+        'time_close_10m_count': 0.0,
+        'duration_close_count': 0.0,
+        'start_abs_error_sum': 0.0,
+        'matched_pairs': 0.0,
+        'overlap_same_device_count': 0.0,
+        'overlap_global_count': 0.0,
+        'unknown_device_count': 0.0,
+    }
+    per_task_accumulator: dict[str, dict[str, float]] = {}
+
     for idx in week_indices:
         pred_week = predict_next_week(occurrence_model, temporal_model, prepared, idx, device, use_repair=use_repair)
         stats = evaluate_weekly_predictions(prepared.weeks[idx], pred_week)
-        stats_list.append(stats)
+        for key in totals:
+            totals[key] += float(stats.get(key, 0.0))
         for task_name, task_stats in stats.get('per_task', {}).items():
-            per_task_accumulator.setdefault(task_name, []).append((float(task_stats.get('task_accuracy', 0.0)), float(task_stats.get('time_exact_accuracy', 0.0))))
-    avg = {k: float(np.mean([float(s[k]) for s in stats_list])) for k in ['total_tasks','correct_tasks','task_accuracy','time_exact_accuracy','time_close_accuracy_5m','time_close_accuracy_10m','duration_close_accuracy','start_mae_minutes','overlap_count']}
-    avg['per_task'] = {task_name: {'task_accuracy': float(np.mean([x[0] for x in values])), 'time_exact_accuracy': float(np.mean([x[1] for x in values]))} for task_name, values in per_task_accumulator.items()}
-    avg['e2e_task_acc'] = avg['task_accuracy'] * 100.0
-    avg['e2e_start_exact_acc'] = avg['time_exact_accuracy'] * 100.0
-    avg['e2e_start_tol_acc_5m'] = avg['time_close_accuracy_5m'] * 100.0
-    avg['e2e_overlap_count'] = avg['overlap_count']
-    avg['e2e_joint_score'] = avg['e2e_task_acc'] + avg['e2e_start_exact_acc'] - 5.0 * avg['e2e_overlap_count']
-    return avg
+            accumulator = per_task_accumulator.setdefault(task_name, {'total': 0.0, 'task_correct': 0.0, 'time_exact': 0.0})
+            accumulator['total'] += float(task_stats.get('total', 0.0))
+            accumulator['task_correct'] += float(task_stats.get('task_correct', 0.0))
+            accumulator['time_exact'] += float(task_stats.get('time_exact', 0.0))
+
+    total_tasks = totals['total_tasks']
+    predicted_tasks = totals['predicted_tasks']
+    correct_tasks = totals['correct_tasks']
+    matched_pairs = totals['matched_pairs']
+
+    precision = correct_tasks / predicted_tasks if predicted_tasks > 0 else 0.0
+    recall = correct_tasks / total_tasks if total_tasks > 0 else 0.0
+    f1 = 2.0 * precision * recall / max(precision + recall, 1e-8)
+
+    result = {
+        **totals,
+        'task_accuracy': recall,
+        'task_precision': precision,
+        'task_recall': recall,
+        'task_f1': f1,
+        'time_exact_accuracy': totals['time_exact_count'] / total_tasks if total_tasks > 0 else 0.0,
+        'time_close_accuracy': totals['time_close_5m_count'] / total_tasks if total_tasks > 0 else 0.0,
+        'time_close_accuracy_5m': totals['time_close_5m_count'] / total_tasks if total_tasks > 0 else 0.0,
+        'time_close_accuracy_10m': totals['time_close_10m_count'] / total_tasks if total_tasks > 0 else 0.0,
+        'duration_close_accuracy': totals['duration_close_count'] / total_tasks if total_tasks > 0 else 0.0,
+        'start_mae_minutes': totals['start_abs_error_sum'] / matched_pairs if matched_pairs > 0 else 0.0,
+        'overlap_count': totals['overlap_same_device_count'],
+        'per_task': {},
+    }
+
+    for task_name, counts in sorted(per_task_accumulator.items()):
+        task_total = counts['total']
+        result['per_task'][task_name] = {
+            'total': counts['total'],
+            'task_correct': counts['task_correct'],
+            'time_exact': counts['time_exact'],
+            'task_accuracy': counts['task_correct'] / task_total if task_total > 0 else 0.0,
+            'time_exact_accuracy': counts['time_exact'] / task_total if task_total > 0 else 0.0,
+        }
+
+    result['e2e_task_acc'] = result['task_accuracy'] * 100.0
+    result['e2e_start_exact_acc'] = result['time_exact_accuracy'] * 100.0
+    result['e2e_start_tol_acc_5m'] = result['time_close_accuracy_5m'] * 100.0
+    result['e2e_overlap_count'] = result['overlap_same_device_count']
+    result['e2e_joint_score'] = result['e2e_task_acc'] + result['e2e_start_exact_acc'] - 5.0 * result['e2e_overlap_count']
+    return result
 
 
 class TemporalE2EEvaluator:
@@ -133,39 +274,93 @@ class TemporalE2EEvaluator:
     @torch.no_grad()
     def __call__(self, temporal_model):
         temporal_model.eval()
-        stats = aggregate_weekly_stats(self.prepared, self.week_indices, self.occurrence_model, temporal_model, self.device, use_repair=self.use_repair)
-        return {k: stats.get(k, 0.0) for k in ['e2e_task_acc','e2e_start_exact_acc','e2e_start_tol_acc_5m','e2e_overlap_count','e2e_joint_score']}
+        stats = aggregate_weekly_stats(
+            self.prepared,
+            self.week_indices,
+            self.occurrence_model,
+            temporal_model,
+            self.device,
+            use_repair=self.use_repair,
+        )
+        return {k: stats.get(k, 0.0) for k in ['e2e_task_acc', 'e2e_start_exact_acc', 'e2e_start_tol_acc_5m', 'e2e_overlap_count', 'e2e_joint_score']}
 
 
-def summarize_weekly_predictions(label, stats: dict):
-    if not stats:
-        print(f'\nResumen semanal interpretativo — {label}')
-        print('  Sin semanas disponibles.')
-        return
-    print(f'\nResumen semanal interpretativo — {label}')
-    print('-' * 50)
-    print(f"Tareas por semana   : {stats['total_tasks']:.1f}")
-    print(f"Tareas correctas    : {stats['correct_tasks']:.1f}/{stats['total_tasks']:.1f}")
-    print(f"Horario exacto      : {stats['time_exact_accuracy'] * 100:.1f}%")
-    print(f"Horario ±5 min      : {stats['time_close_accuracy_5m'] * 100:.1f}%")
-    print(f"Horario ±10 min     : {stats['time_close_accuracy_10m'] * 100:.1f}%")
-    print(f"MAE inicio          : {stats['start_mae_minutes']:.2f} min")
-    print(f"Duración ±2 min     : {stats['duration_close_accuracy'] * 100:.1f}%")
-    print(f"Overlaps/semana     : {stats['overlap_count']:.2f}")
-    if stats.get('per_task'):
-        print('  Por tarea:')
-        for task_name, task_stats in sorted(stats['per_task'].items()):
-            print(f"    - {task_name}: task_acc={task_stats['task_accuracy'] * 100:.1f}% | start_exact={task_stats['time_exact_accuracy'] * 100:.1f}%")
+def build_final_report(occ_state, occ_val_metrics, tmp_state, tmp_val_metrics, ensemble_stats, report_path: Path) -> dict:
+    occurrence_block = {
+        'type': 'rule_based' if OCCURRENCE_MODEL_KIND == 'structured_lag4' else 'trainable',
+        'metrics': _select_metrics(occ_val_metrics, OCCURRENCE_REPORT_KEYS),
+    }
+    if OCCURRENCE_MODEL_KIND != 'structured_lag4':
+        occurrence_block['meta'] = {
+            'best_epoch': int(occ_state.best_epoch),
+            'monitor_name': occ_state.monitor_name,
+            'monitor_value': _round_float(occ_state.best_metric),
+        }
+
+    temporal_metrics_report = _select_metrics(tmp_val_metrics, TEMPORAL_REPORT_KEYS)
+    ensemble_metrics_report = _select_metrics(ensemble_stats, ENSEMBLE_REPORT_KEYS)
+    for key in PERCENTAGE_REPORT_KEYS:
+        if key in ensemble_metrics_report:
+            ensemble_metrics_report[key] = _round_float(ensemble_metrics_report[key] * 100.0)
+
+    return {
+        'occurrence': occurrence_block,
+        'temporal': {
+            'metrics': temporal_metrics_report,
+            'meta': {
+                'best_epoch': int(tmp_state.best_epoch),
+                'monitor_name': tmp_state.monitor_name,
+                'monitor_value': _round_float(tmp_state.best_metric),
+            },
+        },
+        'ensemble': {
+            'metrics': ensemble_metrics_report,
+        },
+        'per_task_final': _build_per_task_report(ensemble_stats.get('per_task', {})),
+        'meta': {
+            'occurrence_model_kind': OCCURRENCE_MODEL_KIND,
+            'prediction_use_repair': bool(PREDICTION_USE_REPAIR),
+            'best_epoch_temporal': int(tmp_state.best_epoch),
+            'monitor_name': tmp_state.monitor_name,
+            'monitor_value': _round_float(tmp_state.best_metric),
+        },
+        'report_path': str(report_path),
+    }
 
 
 def build_occurrence_model(prepared, occ_train: OccurrenceDataset, device: torch.device):
     if OCCURRENCE_MODEL_KIND == 'structured_lag4':
-        model = StructuredOccurrenceModel(prepared.week_feature_dim, len(prepared.task_names), prepared.max_count_cap, lag_weeks=OCC_LAG_WEEKS).to(device)
+        model = StructuredOccurrenceModel(
+            prepared.week_feature_dim,
+            len(prepared.task_names),
+            prepared.max_count_cap,
+            lag_weeks=OCC_LAG_WEEKS,
+        ).to(device)
         target_counts = torch.stack([item['target_counts'] for item in occ_train], dim=0) if len(occ_train) > 0 else None
         model.fit(target_counts)
-        state = SimpleNamespace(best_epoch=0, best_metric=float('nan'), best_train_loss=0.0, best_val_loss=0.0, final_train_loss=0.0, final_val_loss=0.0, best_train_metrics={}, best_val_metrics={}, final_train_metrics={}, final_val_metrics={}, monitor_name='rule_based', monitor_mode='max')
+        state = SimpleNamespace(
+            best_epoch=0,
+            best_metric=float('nan'),
+            best_train_loss=0.0,
+            best_val_loss=0.0,
+            final_train_loss=0.0,
+            final_val_loss=0.0,
+            best_train_metrics={},
+            best_val_metrics={},
+            final_train_metrics={},
+            final_val_metrics={},
+            monitor_name='rule_based',
+            monitor_mode='max',
+        )
         return model, state
-    model = TaskOccurrenceModel(prepared.week_feature_dim, len(prepared.task_names), prepared.max_count_cap, OCC_HIDDEN_SIZE, OCC_NUM_LAYERS, OCC_DROPOUT).to(device)
+    model = TaskOccurrenceModel(
+        prepared.week_feature_dim,
+        len(prepared.task_names),
+        prepared.max_count_cap,
+        OCC_HIDDEN_SIZE,
+        OCC_NUM_LAYERS,
+        OCC_DROPOUT,
+    ).to(device)
     raise NotImplementedError('Esta versión del proyecto está configurada para OCCURRENCE_MODEL_KIND=structured_lag4')
 
 
@@ -173,7 +368,7 @@ def main():
     set_seed(SEED)
     device = resolve_device()
     print(f"\nDevice de entrenamiento: {device}")
-    if device.type == "cuda":
+    if device.type == 'cuda':
         print(f"GPU: {torch.cuda.get_device_name(0)}")
 
     print("\n[1/6] Cargando datos...", flush=True)
@@ -191,8 +386,8 @@ def main():
     zero_loss = ZeroLoss()
     occ_train_loader = DataLoader(occ_train, batch_size=OCC_BATCH_SIZE, shuffle=False)
     occ_val_loader = DataLoader(occ_val, batch_size=OCC_BATCH_SIZE, shuffle=False)
-    occ_train_loss, occ_train_metrics = evaluate_epoch(occurrence_model, occ_train_loader, zero_loss, occurrence_metrics, device)
-    occ_val_loss, occ_val_metrics = evaluate_epoch(occurrence_model, occ_val_loader, zero_loss, occurrence_metrics, device)
+    _, occ_train_metrics = evaluate_epoch(occurrence_model, occ_train_loader, zero_loss, occurrence_metrics, device)
+    _, occ_val_metrics = evaluate_epoch(occurrence_model, occ_val_loader, zero_loss, occurrence_metrics, device)
     occ_state.best_train_metrics = dict(occ_train_metrics)
     occ_state.best_val_metrics = dict(occ_val_metrics)
     occ_state.final_train_metrics = dict(occ_train_metrics)
@@ -201,8 +396,22 @@ def main():
     print("[6/6] Construyendo TemporalDataset alineado con inferencia...", flush=True)
     train_count_lookup = build_occurrence_count_lookup(prepared, split.train_target_week_indices, occurrence_model, device)
     val_count_lookup = build_occurrence_count_lookup(prepared, split.val_target_week_indices, occurrence_model, device)
-    tmp_train = TemporalDataset(prepared, split.train_target_week_indices, count_lookup=train_count_lookup, count_blend_alpha=TEMPORAL_COUNT_BLEND_TARGET_WEIGHT, show_progress=True, desc="TemporalDataset train")
-    tmp_val = TemporalDataset(prepared, split.val_target_week_indices, count_lookup=val_count_lookup, count_blend_alpha=0.0, show_progress=True, desc="TemporalDataset val")
+    tmp_train = TemporalDataset(
+        prepared,
+        split.train_target_week_indices,
+        count_lookup=train_count_lookup,
+        count_blend_alpha=TEMPORAL_COUNT_BLEND_TARGET_WEIGHT,
+        show_progress=True,
+        desc='TemporalDataset train',
+    )
+    tmp_val = TemporalDataset(
+        prepared,
+        split.val_target_week_indices,
+        count_lookup=val_count_lookup,
+        count_blend_alpha=0.0,
+        show_progress=True,
+        desc='TemporalDataset val',
+    )
 
     print('\nResumen del dataset')
     print(f'  Tareas únicas             : {len(prepared.task_names)}')
@@ -224,40 +433,124 @@ def main():
     tmp_train_loader = DataLoader(tmp_train, batch_size=TMP_BATCH_SIZE, shuffle=True)
     tmp_val_loader = DataLoader(tmp_val, batch_size=TMP_BATCH_SIZE, shuffle=False)
 
-    temporal_model = TemporalAssignmentModel(prepared.week_feature_dim, prepared.history_feature_dim, len(prepared.task_names), prepared.max_count_cap, TMP_HIDDEN_SIZE, TMP_NUM_LAYERS, TMP_DROPOUT, TASK_EMBED_DIM, OCC_EMBED_DIM, DAY_EMBED_DIM).to(device)
+    temporal_model = TemporalAssignmentModel(
+        prepared.week_feature_dim,
+        prepared.history_feature_dim,
+        len(prepared.task_names),
+        prepared.max_count_cap,
+        TMP_HIDDEN_SIZE,
+        TMP_NUM_LAYERS,
+        TMP_DROPOUT,
+        TASK_EMBED_DIM,
+        OCC_EMBED_DIM,
+        DAY_EMBED_DIM,
+    ).to(device)
     temporal_loss_fn = TemporalLoss()
     temporal_optimizer = torch.optim.AdamW(temporal_model.parameters(), lr=TMP_LR, weight_decay=TMP_WEIGHT_DECAY)
-    temporal_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(temporal_optimizer, mode='max', factor=0.5, patience=TMP_SCHEDULER_PATIENCE)
+    temporal_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        temporal_optimizer,
+        mode='max',
+        factor=0.5,
+        patience=TMP_SCHEDULER_PATIENCE,
+    )
     duration_span = max(prepared.duration_max - prepared.duration_min, 1e-6)
-    def temporal_metrics_wrapper(outputs, batch): return temporal_metrics(outputs, batch, duration_span)
-    e2e_evaluator = TemporalE2EEvaluator(prepared, split.val_target_week_indices, occurrence_model, device, use_repair=False)
 
-    tmp_state = fit_model(temporal_model, tmp_train_loader, tmp_val_loader, temporal_optimizer, temporal_scheduler, temporal_loss_fn, temporal_metrics_wrapper, device, TMP_MAX_EPOCHS, TMP_PATIENCE, 'TemporalModel', monitor_name='e2e_joint_score', monitor_mode='max', min_delta=0.10, extra_val_evaluator=e2e_evaluator)
+    def temporal_metrics_wrapper(outputs, batch):
+        return temporal_metrics(outputs, batch, duration_span)
+
+    e2e_evaluator = TemporalE2EEvaluator(
+        prepared,
+        split.val_target_week_indices,
+        occurrence_model,
+        device,
+        use_repair=PREDICTION_USE_REPAIR,
+    )
+    tmp_state = fit_model(
+        temporal_model,
+        tmp_train_loader,
+        tmp_val_loader,
+        temporal_optimizer,
+        temporal_scheduler,
+        temporal_loss_fn,
+        temporal_metrics_wrapper,
+        device,
+        TMP_MAX_EPOCHS,
+        TMP_PATIENCE,
+        'TemporalModel',
+        monitor_name='e2e_joint_score',
+        monitor_mode='max',
+        min_delta=0.10,
+        extra_val_evaluator=e2e_evaluator,
+    )
 
     metadata = serialize_metadata(prepared)
     metadata['occurrence_model_kind'] = OCCURRENCE_MODEL_KIND
     metadata['occurrence_lag_weeks'] = OCC_LAG_WEEKS
 
-    save_checkpoint(CHECKPOINT_DIR / 'occurrence_model.pt', {'state_dict': occurrence_model.state_dict(), 'metadata': metadata, 'best_epoch': occ_state.best_epoch, 'best_val_loss': occ_state.best_val_loss, 'best_monitor_name': occ_state.monitor_name, 'best_monitor_value': occ_state.best_metric, 'model_hparams': {'model_kind': OCCURRENCE_MODEL_KIND, 'input_dim': prepared.week_feature_dim, 'num_tasks': len(prepared.task_names), 'max_count_cap': prepared.max_count_cap, 'lag_weeks': OCC_LAG_WEEKS, 'max_occurrences_per_task': prepared.max_occurrences_per_task, 'max_tasks_per_week': prepared.max_tasks_per_week}})
-    save_checkpoint(CHECKPOINT_DIR / 'temporal_model.pt', {'state_dict': temporal_model.state_dict(), 'metadata': metadata, 'best_epoch': tmp_state.best_epoch, 'best_val_loss': tmp_state.best_val_loss, 'best_monitor_name': tmp_state.monitor_name, 'best_monitor_value': tmp_state.best_metric, 'model_hparams': {'sequence_dim': prepared.week_feature_dim, 'history_feature_dim': prepared.history_feature_dim, 'num_tasks': len(prepared.task_names), 'max_occurrences': prepared.max_count_cap, 'max_occurrences_per_task': prepared.max_occurrences_per_task, 'hidden_size': TMP_HIDDEN_SIZE, 'num_layers': TMP_NUM_LAYERS, 'dropout': TMP_DROPOUT, 'task_embed_dim': TASK_EMBED_DIM, 'occurrence_embed_dim': OCC_EMBED_DIM, 'day_embed_dim': DAY_EMBED_DIM, 'max_tasks_per_week': prepared.max_tasks_per_week}})
+    save_checkpoint(
+        CHECKPOINT_DIR / 'occurrence_model.pt',
+        {
+            'state_dict': occurrence_model.state_dict(),
+            'metadata': metadata,
+            'best_epoch': occ_state.best_epoch,
+            'best_val_loss': occ_state.best_val_loss,
+            'best_monitor_name': occ_state.monitor_name,
+            'best_monitor_value': occ_state.best_metric,
+            'model_hparams': {
+                'model_kind': OCCURRENCE_MODEL_KIND,
+                'input_dim': prepared.week_feature_dim,
+                'num_tasks': len(prepared.task_names),
+                'max_count_cap': prepared.max_count_cap,
+                'lag_weeks': OCC_LAG_WEEKS,
+                'max_occurrences_per_task': prepared.max_occurrences_per_task,
+                'max_tasks_per_week': prepared.max_tasks_per_week,
+            },
+        },
+    )
+    save_checkpoint(
+        CHECKPOINT_DIR / 'temporal_model.pt',
+        {
+            'state_dict': temporal_model.state_dict(),
+            'metadata': metadata,
+            'best_epoch': tmp_state.best_epoch,
+            'best_val_loss': tmp_state.best_val_loss,
+            'best_monitor_name': tmp_state.monitor_name,
+            'best_monitor_value': tmp_state.best_metric,
+            'model_hparams': {
+                'sequence_dim': prepared.week_feature_dim,
+                'history_feature_dim': prepared.history_feature_dim,
+                'num_tasks': len(prepared.task_names),
+                'max_occurrences': prepared.max_count_cap,
+                'max_occurrences_per_task': prepared.max_occurrences_per_task,
+                'hidden_size': TMP_HIDDEN_SIZE,
+                'num_layers': TMP_NUM_LAYERS,
+                'dropout': TMP_DROPOUT,
+                'task_embed_dim': TASK_EMBED_DIM,
+                'occurrence_embed_dim': OCC_EMBED_DIM,
+                'day_embed_dim': DAY_EMBED_DIM,
+                'max_tasks_per_week': prepared.max_tasks_per_week,
+            },
+        },
+    )
+
+    _, tmp_val_metrics = evaluate_epoch(temporal_model, tmp_val_loader, temporal_loss_fn, temporal_metrics_wrapper, device)
+    ensemble_val_stats = aggregate_weekly_stats(
+        prepared,
+        split.val_target_week_indices,
+        occurrence_model,
+        temporal_model,
+        device,
+        use_repair=PREDICTION_USE_REPAIR,
+    )
+
+    report_path = REPORTS_DIR / 'training_report.json'
+    report = build_final_report(occ_state, occ_val_metrics, tmp_state, tmp_val_metrics, ensemble_val_stats, report_path)
+    save_final_report(report, report_path)
 
     print('\nModelos guardados en:')
     print(f"  - {CHECKPOINT_DIR / 'occurrence_model.pt'}")
     print(f"  - {CHECKPOINT_DIR / 'temporal_model.pt'}")
-    print_training_summary('OccurrenceModel', occ_state)
-    print_training_summary('TemporalModel', tmp_state)
-    print('\nResumen final con mejores pesos cargados')
-    print('-' * 50)
-    print('OccurrenceModel')
-    print_loader_summary('train', occ_train_loss, occ_train_metrics)
-    print_loader_summary('val  ', occ_val_loss, occ_val_metrics)
-    tmp_train_loss, tmp_train_metrics = evaluate_epoch(temporal_model, tmp_train_loader, temporal_loss_fn, temporal_metrics_wrapper, device)
-    tmp_val_loss, tmp_val_metrics = evaluate_epoch(temporal_model, tmp_val_loader, temporal_loss_fn, temporal_metrics_wrapper, device)
-    print('TemporalModel')
-    print_loader_summary('train', tmp_train_loss, tmp_train_metrics)
-    print_loader_summary('val  ', tmp_val_loss, tmp_val_metrics)
-    summarize_weekly_predictions('train', aggregate_weekly_stats(prepared, split.train_target_week_indices[-8:], occurrence_model, temporal_model, device, use_repair=False))
-    summarize_weekly_predictions('validación', aggregate_weekly_stats(prepared, split.val_target_week_indices, occurrence_model, temporal_model, device, use_repair=False))
+    print_final_report(report)
 
 
 if __name__ == '__main__':

@@ -1,20 +1,24 @@
 from __future__ import annotations
 
-import json
 import random
 from types import SimpleNamespace
 
 import numpy as np
 import torch
-torch.backends.cudnn.enabled = True
 from torch.utils.data import DataLoader
 
 from config import (
     CAP_INFERENCE_SCOPE,
     CHECKPOINT_DIR,
     DATA_PATH,
+    DATALOADER_NUM_WORKERS,
+    DATALOADER_PERSISTENT_WORKERS,
+    DATALOADER_PIN_MEMORY,
+    DATALOADER_PREFETCH_FACTOR,
     DAY_EMBED_DIM,
     DEVICE,
+    ENABLE_CUDNN_BENCHMARK,
+    ENABLE_TF32,
     OCC_BATCH_SIZE,
     OCC_DROPOUT,
     OCC_EMBED_DIM,
@@ -26,14 +30,17 @@ from config import (
     TASK_EMBED_DIM,
     TEMPORAL_COUNT_BLEND_TARGET_WEIGHT,
     TIMEZONE,
+    TMP_AMP_DTYPE,
     TMP_BATCH_SIZE,
     TMP_DROPOUT,
+    TMP_E2E_EVAL_EVERY,
     TMP_HIDDEN_SIZE,
     TMP_LR,
     TMP_MAX_EPOCHS,
     TMP_NUM_LAYERS,
     TMP_PATIENCE,
     TMP_SCHEDULER_PATIENCE,
+    TMP_USE_AMP,
     TMP_WEIGHT_DECAY,
     TRAIN_RATIO,
     num_day_classes,
@@ -61,10 +68,36 @@ def set_seed(seed: int):
         torch.cuda.manual_seed_all(seed)
 
 
+def configure_runtime(device: torch.device) -> None:
+    if hasattr(torch, 'set_float32_matmul_precision'):
+        torch.set_float32_matmul_precision('high')
+    if device.type == 'cuda':
+        torch.backends.cudnn.enabled = True
+        torch.backends.cudnn.benchmark = ENABLE_CUDNN_BENCHMARK
+        if hasattr(torch.backends.cuda, 'matmul'):
+            torch.backends.cuda.matmul.allow_tf32 = ENABLE_TF32
+        if hasattr(torch.backends.cudnn, 'allow_tf32'):
+            torch.backends.cudnn.allow_tf32 = ENABLE_TF32
+
+
 def resolve_device() -> torch.device:
     if DEVICE == 'cuda' and torch.cuda.is_available():
         return torch.device('cuda')
     return torch.device('cpu')
+
+
+def make_dataloader(dataset, batch_size: int, shuffle: bool, device: torch.device) -> DataLoader:
+    num_workers = max(0, int(DATALOADER_NUM_WORKERS))
+    kwargs = {
+        'batch_size': batch_size,
+        'shuffle': shuffle,
+        'num_workers': num_workers,
+        'pin_memory': bool(DATALOADER_PIN_MEMORY and device.type == 'cuda'),
+    }
+    if num_workers > 0:
+        kwargs['persistent_workers'] = bool(DATALOADER_PERSISTENT_WORKERS)
+        kwargs['prefetch_factor'] = max(2, int(DATALOADER_PREFETCH_FACTOR))
+    return DataLoader(dataset, **kwargs)
 
 
 class ZeroLoss(torch.nn.Module):
@@ -78,10 +111,6 @@ class ZeroLoss(torch.nn.Module):
 
 def _format_metrics(metrics: dict[str, float]) -> str:
     return ' | '.join(f'{k}={v:.3f}' for k, v in metrics.items()) if metrics else '-'
-
-
-def _to_float_dict(metrics: dict[str, float]) -> dict[str, float]:
-    return {k: float(v) for k, v in metrics.items()}
 
 
 def print_training_summary(model_name: str, state):
@@ -143,18 +172,18 @@ def save_training_report(path, model_name: str, state, extra: dict | None = None
         json.dump(payload, fh, ensure_ascii=True, indent=2)
 
 
-def aggregate_weekly_stats(prepared, week_indices, occurrence_model, temporal_model, device, use_repair: bool = False):
+def aggregate_weekly_stats(prepared, week_indices, occurrence_model, temporal_model, device):
     if not week_indices:
         return {}
     stats_list = []
     per_task_accumulator: dict[str, list[tuple[float, float]]] = {}
     for idx in week_indices:
-        pred_week = predict_next_week(occurrence_model, temporal_model, prepared, idx, device, use_repair=use_repair)
+        pred_week = predict_next_week(occurrence_model, temporal_model, prepared, idx, device)
         stats = evaluate_weekly_predictions(prepared.weeks[idx], pred_week)
         stats_list.append(stats)
         for task_name, task_stats in stats.get('per_task', {}).items():
             per_task_accumulator.setdefault(task_name, []).append((float(task_stats.get('task_accuracy', 0.0)), float(task_stats.get('time_exact_accuracy', 0.0))))
-    avg = {k: float(np.mean([float(s[k]) for s in stats_list])) for k in ['total_tasks','correct_tasks','task_accuracy','time_exact_accuracy','time_close_accuracy_5m','time_close_accuracy_10m','duration_close_accuracy','start_mae_minutes','overlap_count']}
+    avg = {k: float(np.mean([float(s[k]) for s in stats_list])) for k in ['total_tasks', 'correct_tasks', 'task_accuracy', 'time_exact_accuracy', 'time_close_accuracy_5m', 'time_close_accuracy_10m', 'duration_close_accuracy', 'start_mae_minutes', 'overlap_count']}
     avg['per_task'] = {task_name: {'task_accuracy': float(np.mean([x[0] for x in values])), 'time_exact_accuracy': float(np.mean([x[1] for x in values]))} for task_name, values in per_task_accumulator.items()}
     avg['e2e_task_acc'] = avg['task_accuracy'] * 100.0
     avg['e2e_start_exact_acc'] = avg['time_exact_accuracy'] * 100.0
@@ -162,6 +191,7 @@ def aggregate_weekly_stats(prepared, week_indices, occurrence_model, temporal_mo
     avg['e2e_overlap_count'] = avg['overlap_count']
     avg['e2e_joint_score'] = avg['e2e_task_acc'] + avg['e2e_start_exact_acc'] - 5.0 * avg['e2e_overlap_count']
     return avg
+
 
 
 class TemporalE2EEvaluator:

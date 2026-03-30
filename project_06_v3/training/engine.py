@@ -30,8 +30,17 @@ def _move_batch_to_device(batch: dict[str, torch.Tensor], device: torch.device) 
     return {k: (v.to(device) if isinstance(v, torch.Tensor) else v) for k, v in batch.items()}
 
 
-def _average_metrics(metrics: dict[str, float], n_batches: int) -> dict[str, float]:
-    return {k: v / max(n_batches, 1) for k, v in metrics.items()}
+def _infer_batch_size(batch: dict[str, torch.Tensor]) -> int:
+    for value in batch.values():
+        if isinstance(value, torch.Tensor) and value.ndim > 0:
+            return int(value.shape[0])
+    return 1
+
+
+def _average_metrics(metrics: dict[str, float], total_weight: int) -> dict[str, float]:
+    if total_weight <= 0:
+        return {k: 0.0 for k in metrics}
+    return {k: v / float(total_weight) for k, v in metrics.items()}
 
 
 def model_step(model, batch, training: bool = False):
@@ -67,39 +76,47 @@ def metrics_step(metrics_fn, batch, outputs):
 def train_epoch(model, loader, optimizer, loss_fn, metrics_fn, device):
     model.train()
     running_loss = 0.0
+    total_samples = 0
     running_metrics: dict[str, float] | None = None
     for batch in loader:
         batch = _move_batch_to_device(batch, device)
+        batch_size = _infer_batch_size(batch)
         optimizer.zero_grad(set_to_none=True)
         outputs = model_step(model, batch, training=True)
         loss = loss_step(loss_fn, batch, outputs)
         loss.backward()
         optimizer.step()
-        running_loss += float(loss.item())
+        running_loss += float(loss.item()) * batch_size
+        total_samples += batch_size
         batch_metrics = metrics_step(metrics_fn, batch, outputs)
         if running_metrics is None:
             running_metrics = {k: 0.0 for k in batch_metrics}
         for key, value in batch_metrics.items():
-            running_metrics[key] += float(value)
-    return running_loss / max(len(loader), 1), _average_metrics(running_metrics or {}, len(loader))
+            running_metrics[key] += float(value) * batch_size
+    average_loss = running_loss / max(total_samples, 1)
+    return average_loss, _average_metrics(running_metrics or {}, total_samples)
 
 
 @torch.no_grad()
 def evaluate_epoch(model, loader, loss_fn, metrics_fn, device):
     model.eval()
     running_loss = 0.0
+    total_samples = 0
     running_metrics: dict[str, float] | None = None
     for batch in loader:
         batch = _move_batch_to_device(batch, device)
+        batch_size = _infer_batch_size(batch)
         outputs = model_step(model, batch, training=False)
         loss = loss_step(loss_fn, batch, outputs)
-        running_loss += float(loss.item())
+        running_loss += float(loss.item()) * batch_size
+        total_samples += batch_size
         batch_metrics = metrics_step(metrics_fn, batch, outputs)
         if running_metrics is None:
             running_metrics = {k: 0.0 for k in batch_metrics}
         for key, value in batch_metrics.items():
-            running_metrics[key] += float(value)
-    return running_loss / max(len(loader), 1), _average_metrics(running_metrics or {}, len(loader))
+            running_metrics[key] += float(value) * batch_size
+    average_loss = running_loss / max(total_samples, 1)
+    return average_loss, _average_metrics(running_metrics or {}, total_samples)
 
 
 def _get_monitor_value(val_loss: float, val_metrics: dict[str, float], monitor_name: str | None) -> float:

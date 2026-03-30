@@ -1,0 +1,68 @@
+{
+  "occurrence": {
+    "type": "rule_based",
+    "metrics": {
+      "count_exact_acc": 93.75,
+      "count_mae": 0.0938,
+      "weekly_total_mae": 0.375,
+      "presence_f1": 100.0
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 100.0,
+      "start_tol_acc_5m": 100.0,
+      "start_tol_acc_10m": 100.0,
+      "start_mae_minutes": 0.0,
+      "duration_mae_minutes": 0.1411
+    },
+    "meta": {
+      "best_epoch": 93,
+      "monitor_name": "val_loss",
+      "monitor_value": 0.2207
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 99.18,
+      "task_recall": 100.0,
+      "task_f1": 99.59,
+      "time_exact_accuracy": 100.0,
+      "time_close_accuracy_5m": 100.0,
+      "time_close_accuracy_10m": 100.0,
+      "duration_close_accuracy": 100.0,
+      "start_mae_minutes": 0.0,
+      "overlap_same_device_count": 0.0
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 90.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 100.0
+    },
+    "Clean": {
+      "total": 112.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 100.0
+    },
+    "Delivery": {
+      "total": 80.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 100.0
+    },
+    "Patroll": {
+      "total": 80.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 100.0
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 93,
+    "monitor_name": "val_loss",
+    "monitor_value": 0.2207,
+    "prediction_use_repair": false,
+    "occurrence_model_kind": "structured_lag4"
+  },
+  "report_path": "/home/miguel/Escritorio/prediction_deliverance/project_06_V3.1/reports/training_report.json"
+}
