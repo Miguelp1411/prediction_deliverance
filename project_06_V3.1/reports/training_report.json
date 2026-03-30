@@ -2,65 +2,65 @@
   "occurrence": {
     "type": "rule_based",
     "metrics": {
-      "count_exact_acc": 93.75,
-      "count_mae": 0.0938,
-      "weekly_total_mae": 0.375,
-      "presence_f1": 100.0
+      "count_exact_acc": 12.7551,
+      "count_mae": 5.051,
+      "weekly_total_mae": 10.4898,
+      "presence_f1": 97.5822
     }
   },
   "temporal": {
     "metrics": {
-      "start_exact_acc": 100.0,
-      "start_tol_acc_5m": 100.0,
-      "start_tol_acc_10m": 100.0,
-      "start_mae_minutes": 0.0,
-      "duration_mae_minutes": 0.1411
+      "start_exact_acc": 36.0795,
+      "start_tol_acc_5m": 36.1771,
+      "start_tol_acc_10m": 37.3168,
+      "start_mae_minutes": 497.6962,
+      "duration_mae_minutes": 0.0926
     },
     "meta": {
-      "best_epoch": 93,
+      "best_epoch": 26,
       "monitor_name": "val_loss",
-      "monitor_value": 0.2207
+      "monitor_value": 2.692
     }
   },
   "ensemble": {
     "metrics": {
-      "task_precision": 99.18,
-      "task_recall": 100.0,
-      "task_f1": 99.59,
-      "time_exact_accuracy": 100.0,
-      "time_close_accuracy_5m": 100.0,
-      "time_close_accuracy_10m": 100.0,
-      "duration_close_accuracy": 100.0,
-      "start_mae_minutes": 0.0,
-      "overlap_same_device_count": 0.0
+      "task_precision": 84.44,
+      "task_recall": 83.07,
+      "task_f1": 83.75,
+      "time_exact_accuracy": 44.25,
+      "time_close_accuracy_5m": 44.71,
+      "time_close_accuracy_10m": 45.69,
+      "duration_close_accuracy": 83.07,
+      "start_mae_minutes": 245.4096,
+      "overlap_same_device_count": 1168.0
     }
   },
   "per_task_final": {
     "Assist": {
-      "total": 90.0,
+      "total": 383.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 100.0
+      "time_exact_accuracy": 50.3916
     },
     "Clean": {
-      "total": 112.0,
+      "total": 804.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 100.0
+      "time_exact_accuracy": 52.7363
     },
     "Delivery": {
-      "total": 80.0,
+      "total": 431.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 100.0
+      "time_exact_accuracy": 61.7169
     },
     "Patroll": {
-      "total": 80.0,
+      "total": 933.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 100.0
+      "time_exact_accuracy": 51.0182
     }
   },
   "meta": {
-    "best_epoch_temporal": 93,
+    "best_epoch_temporal": 26,
     "monitor_name": "val_loss",
-    "monitor_value": 0.2207,
+    "monitor_value": 2.692,
     "prediction_use_repair": false,
     "occurrence_model_kind": "structured_lag4"
   },

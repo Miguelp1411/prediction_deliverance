@@ -50,7 +50,12 @@ from config import (
     TRAIN_RATIO,
     num_time_bins,
     num_day_classes,
-    num_time_of_day_classes
+    num_time_of_day_classes,
+    OCC_LR,
+    OCC_WEIGHT_DECAY,
+    OCC_MAX_EPOCHS,
+    OCC_PATIENCE,
+    OCC_SCHEDULER_PATIENCE,
 )
 from data.datasets import OccurrenceDataset, TemporalDataset, build_occurrence_count_lookup, build_split_indices
 from data.io import load_tasks_dataframe
@@ -60,7 +65,7 @@ from models.occurrence_model import StructuredOccurrenceModel, TaskOccurrenceMod
 from models.temporal_model import TemporalAssignmentModel
 from predict import predict_next_week
 from training.engine import evaluate_epoch, fit_model
-from training.losses import TemporalLoss
+from training.losses import OccurrenceLoss, TemporalLoss
 from training.metrics import occurrence_metrics, temporal_metrics
 from utils.serialization import save_checkpoint
 
@@ -354,17 +359,49 @@ def build_final_report(occ_state, occ_val_metrics, tmp_state, tmp_val_metrics, e
         'report_path': str(report_path),
     }
 
-
 def build_occurrence_model(prepared, occ_train: OccurrenceDataset, device: torch.device):
     if OCCURRENCE_MODEL_KIND == 'structured_lag4':
-        model = StructuredOccurrenceModel(prepared.week_feature_dim, len(prepared.task_names), prepared.max_count_cap, lag_weeks=OCC_LAG_WEEKS).to(device)
-        target_counts = torch.stack([item['target_counts'] for item in occ_train], dim=0) if len(occ_train) > 0 else None
-        model.fit(target_counts)
-        state = SimpleNamespace(best_epoch=0, best_metric=float('nan'), best_train_loss=0.0, best_val_loss=0.0, final_train_loss=0.0, final_val_loss=0.0, best_train_metrics={}, best_val_metrics={}, final_train_metrics={}, final_val_metrics={}, monitor_name='rule_based', monitor_mode='max')
-        return model, state
-    model = TaskOccurrenceModel(prepared.week_feature_dim, len(prepared.task_names), prepared.max_count_cap, OCC_HIDDEN_SIZE, OCC_NUM_LAYERS, OCC_DROPOUT).to(device)
-    raise NotImplementedError('Esta versión del proyecto está configurada para OCCURRENCE_MODEL_KIND=structured_lag4')
+        model = StructuredOccurrenceModel(
+            prepared.week_feature_dim,
+            len(prepared.task_names),
+            prepared.max_count_cap,
+            lag_weeks=OCC_LAG_WEEKS,
+        ).to(device)
 
+        target_counts = (
+            torch.stack([item['target_counts'] for item in occ_train], dim=0)
+            if len(occ_train) > 0 else None
+        )
+        model.fit(target_counts)
+
+        state = SimpleNamespace(
+            best_epoch=0,
+            best_metric=float('nan'),
+            best_train_loss=0.0,
+            best_val_loss=0.0,
+            final_train_loss=0.0,
+            final_val_loss=0.0,
+            best_train_metrics={},
+            best_val_metrics={},
+            final_train_metrics={},
+            final_val_metrics={},
+            monitor_name='rule_based',
+            monitor_mode='max',
+        )
+        return model, state
+
+    if OCCURRENCE_MODEL_KIND == 'task_gru':
+        model = TaskOccurrenceModel(
+            prepared.week_feature_dim,
+            len(prepared.task_names),
+            prepared.max_count_cap,
+            OCC_HIDDEN_SIZE,
+            OCC_NUM_LAYERS,
+            OCC_DROPOUT,
+        ).to(device)
+        return model, None
+
+    raise ValueError(f"OCCURRENCE_MODEL_KIND no soportado: {OCCURRENCE_MODEL_KIND}")
 
 def main():
     train_start_time = time.perf_counter()
@@ -385,18 +422,77 @@ def main():
     print("[4/6] Construyendo OccurrenceDataset...", flush=True)
     occ_train = OccurrenceDataset(prepared, split.train_target_week_indices)
     occ_val = OccurrenceDataset(prepared, split.val_target_week_indices)
-    print("[5/6] Ajustando predictor de ocurrencias estructurado...", flush=True)
+    print("[5/6] Preparando OccurrenceModel...", flush=True)
     occurrence_model, occ_state = build_occurrence_model(prepared, occ_train, device)
 
-    zero_loss = ZeroLoss()
-    occ_train_loader = make_dataloader(occ_train, batch_size=OCC_BATCH_SIZE, shuffle=False, device=device)
-    occ_val_loader = make_dataloader(occ_val, batch_size=OCC_BATCH_SIZE, shuffle=False, device=device)
-    occ_train_loss, occ_train_metrics = evaluate_epoch(occurrence_model, occ_train_loader, zero_loss, occurrence_metrics, device)
-    occ_val_loss, occ_val_metrics = evaluate_epoch(occurrence_model, occ_val_loader, zero_loss, occurrence_metrics, device)
-    occ_state.best_train_metrics = dict(occ_train_metrics)
-    occ_state.best_val_metrics = dict(occ_val_metrics)
-    occ_state.final_train_metrics = dict(occ_train_metrics)
-    occ_state.final_val_metrics = dict(occ_val_metrics)
+    occ_train_loader = make_dataloader(
+        occ_train,
+        batch_size=OCC_BATCH_SIZE,
+        shuffle=(OCCURRENCE_MODEL_KIND == 'task_gru'),
+        device=device,
+    )
+    occ_val_loader = make_dataloader(
+        occ_val,
+        batch_size=OCC_BATCH_SIZE,
+        shuffle=False,
+        device=device,
+    )
+
+    if OCCURRENCE_MODEL_KIND == 'structured_lag4':
+        occ_loss_fn = ZeroLoss()
+        occ_train_loss, occ_train_metrics = evaluate_epoch(
+            occurrence_model, occ_train_loader, occ_loss_fn, occurrence_metrics, device
+        )
+        occ_val_loss, occ_val_metrics = evaluate_epoch(
+            occurrence_model, occ_val_loader, occ_loss_fn, occurrence_metrics, device
+        )
+        occ_state.final_train_metrics = dict(occ_train_metrics)
+        occ_state.final_val_metrics = dict(occ_val_metrics)
+        occ_state.final_train_loss = float(occ_train_loss)
+        occ_state.final_val_loss = float(occ_val_loss)
+
+    else:
+        occ_loss_fn = OccurrenceLoss()
+        occ_optimizer = torch.optim.AdamW(
+            occurrence_model.parameters(),
+            lr=OCC_LR,
+            weight_decay=OCC_WEIGHT_DECAY,
+        )
+        occ_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            occ_optimizer,
+            mode='min',
+            factor=0.5,
+            patience=OCC_SCHEDULER_PATIENCE,
+        )
+
+        occ_state = fit_model(
+            occurrence_model,
+            occ_train_loader,
+            occ_val_loader,
+            occ_optimizer,
+            occ_scheduler,
+            occ_loss_fn,
+            occurrence_metrics,
+            device,
+            OCC_MAX_EPOCHS,
+            OCC_PATIENCE,
+            'OccurrenceModel',
+            monitor_name='val_loss',
+            monitor_mode='min',
+            min_delta=1e-4,
+            amp_enabled=False,
+        )
+
+        occ_train_loss, occ_train_metrics = evaluate_epoch(
+            occurrence_model, occ_train_loader, occ_loss_fn, occurrence_metrics, device
+        )
+        occ_val_loss, occ_val_metrics = evaluate_epoch(
+            occurrence_model, occ_val_loader, occ_loss_fn, occurrence_metrics, device
+        )
+        occ_state.best_train_metrics = dict(occ_train_metrics)
+        occ_state.best_val_metrics = dict(occ_val_metrics)
+        occ_state.final_train_metrics = dict(occ_train_metrics)
+        occ_state.final_val_metrics = dict(occ_val_metrics)
 
     print("[6/6] Construyendo TemporalDataset alineado con inferencia...", flush=True)
     train_count_lookup = build_occurrence_count_lookup(prepared, split.train_target_week_indices, occurrence_model, device)
@@ -460,7 +556,26 @@ def main():
     metadata['occurrence_model_kind'] = OCCURRENCE_MODEL_KIND
     metadata['occurrence_lag_weeks'] = OCC_LAG_WEEKS
 
-    save_checkpoint(CHECKPOINT_DIR / 'occurrence_model.pt', {'state_dict': occurrence_model.state_dict(), 'metadata': metadata, 'best_epoch': occ_state.best_epoch, 'best_val_loss': occ_state.best_val_loss, 'best_monitor_name': occ_state.monitor_name, 'best_monitor_value': occ_state.best_metric, 'model_hparams': {'model_kind': OCCURRENCE_MODEL_KIND, 'input_dim': prepared.week_feature_dim, 'num_tasks': len(prepared.task_names), 'max_count_cap': prepared.max_count_cap, 'lag_weeks': OCC_LAG_WEEKS, 'max_occurrences_per_task': prepared.max_occurrences_per_task, 'max_tasks_per_week': prepared.max_tasks_per_week}})
+    save_checkpoint(CHECKPOINT_DIR / 'occurrence_model.pt', 
+                    {'state_dict': occurrence_model.state_dict(), 
+                     'metadata': metadata, 
+                     'best_epoch': occ_state.best_epoch, 
+                     'best_val_loss': occ_state.best_val_loss, 
+                     'best_monitor_name': occ_state.monitor_name, 
+                     'best_monitor_value': occ_state.best_metric, 
+                     'model_hparams': {
+                            'model_kind': OCCURRENCE_MODEL_KIND,
+                            'input_dim': prepared.week_feature_dim,
+                            'num_tasks': len(prepared.task_names),
+                            'max_count_cap': prepared.max_count_cap,
+                            'lag_weeks': OCC_LAG_WEEKS,
+                            'hidden_size': OCC_HIDDEN_SIZE,
+                            'num_layers': OCC_NUM_LAYERS,
+                            'dropout': OCC_DROPOUT,
+                            'max_occurrences_per_task': prepared.max_occurrences_per_task,
+                            'max_tasks_per_week': prepared.max_tasks_per_week,
+                        }})
+    
     save_checkpoint(CHECKPOINT_DIR / 'temporal_model.pt', {'state_dict': temporal_model.state_dict(), 'metadata': metadata, 'best_epoch': tmp_state.best_epoch, 'best_val_loss': tmp_state.best_val_loss, 'best_monitor_name': tmp_state.monitor_name, 'best_monitor_value': tmp_state.best_metric, 'model_hparams': {'sequence_dim': prepared.week_feature_dim, 'history_feature_dim': prepared.history_feature_dim, 'num_tasks': len(prepared.task_names), 'max_occurrences': prepared.max_count_cap, 'max_occurrences_per_task': prepared.max_occurrences_per_task, 'hidden_size': TMP_HIDDEN_SIZE, 'num_layers': TMP_NUM_LAYERS, 'dropout': TMP_DROPOUT, 'task_embed_dim': TASK_EMBED_DIM, 'occurrence_embed_dim': OCC_EMBED_DIM, 'day_embed_dim': DAY_EMBED_DIM, 'max_tasks_per_week': prepared.max_tasks_per_week}})
 
     tmp_val_loss, tmp_val_metrics = evaluate_epoch(

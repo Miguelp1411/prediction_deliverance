@@ -288,7 +288,7 @@ def _load_models(prepared, device: torch.device, occ_ckpt: dict | None = None, t
             max_count_cap=int(occ_h.get('max_count_cap', prepared.max_count_cap)),
             lag_weeks=int(occ_h.get('lag_weeks', 4)),
         ).to(device)
-    else:
+    elif occ_kind == 'task_gru':
         occurrence_model = TaskOccurrenceModel(
             input_dim=int(occ_h.get('input_dim', prepared.week_feature_dim)),
             num_tasks=int(occ_h.get('num_tasks', len(prepared.task_names))),
@@ -297,6 +297,8 @@ def _load_models(prepared, device: torch.device, occ_ckpt: dict | None = None, t
             num_layers=int(occ_h.get('num_layers', 2)),
             dropout=float(occ_h.get('dropout', 0.15)),
         ).to(device)
+    else:
+        raise ValueError(f"occurrence model kind no soportado: {occ_kind}")
     occurrence_model.load_state_dict(occ_ckpt['state_dict'], strict=False)
 
     temporal_model = TemporalAssignmentModel(

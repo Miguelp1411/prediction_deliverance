@@ -1,7 +1,7 @@
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DATA_PATH = PROJECT_ROOT / 'robot_schedule_v4_2025_2026.json'
+DATA_PATH = PROJECT_ROOT / 'nexus_schedule_5years.json'
 CHECKPOINT_DIR = PROJECT_ROOT / 'checkpoints'
 
 TIMEZONE = None

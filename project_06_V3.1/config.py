@@ -39,7 +39,7 @@ TMP_E2E_EVAL_EVERY = 5
 VERBOSE_EVERY = 5
 
 # ---- Occurrence model ----
-OCCURRENCE_MODEL_KIND = 'structured_lag4'
+OCCURRENCE_MODEL_KIND = 'task_gru'
 OCC_LAG_WEEKS = 4
 OCC_HIDDEN_SIZE = 128
 OCC_NUM_LAYERS = 2
