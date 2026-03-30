@@ -7,10 +7,10 @@ CHECKPOINT_DIR = PROJECT_ROOT / 'checkpoints'
 
 # ---- Resource-aware scheduling ----
 SCHEDULING_MODE = 'auto'  # auto | single_device | multi_device
-OVERLAP_SCOPE = 'same_device'  # global | same_device
+#OVERLAP_SCOPE = 'same_device'  # global | same_device
 UNKNOWN_DEVICE_TOKEN = '__unknown_device__'
 REPORTS_DIR = PROJECT_ROOT / 'reports'
-ANALYSIS_DIR = PROJECT_ROOT / 'analysis'
+#ANALYSIS_DIR = PROJECT_ROOT / 'analysis'
 
 TIMEZONE = None
 WINDOW_WEEKS = 16
@@ -80,8 +80,8 @@ FEATURE_SCHEMA_VERSION = 4
 START_TOPK_TOLERANCE_BINS = 1
 GLOBAL_DAY_OFFSET_RADIUS_BINS = 14
 LOCAL_START_OFFSET_RADIUS_BINS = 8
-GLOBAL_DAY_OFFSET_SOFT_SIGMA = 1.5
-LOCAL_START_OFFSET_SOFT_SIGMA = 1.0
+#GLOBAL_DAY_OFFSET_SOFT_SIGMA = 1.5
+#LOCAL_START_OFFSET_SOFT_SIGMA = 1.0
 
 PREDICTION_DAY_TOPK = 3
 PREDICTION_TIME_TOPK = 8
@@ -109,11 +109,3 @@ def num_day_classes() -> int:
 
 def num_time_of_day_classes() -> int:
     return bins_per_day()
-
-
-def num_global_day_offset_classes() -> int:
-    return 2 * GLOBAL_DAY_OFFSET_RADIUS_BINS + 1
-
-
-def num_local_start_offset_classes() -> int:
-    return 2 * LOCAL_START_OFFSET_RADIUS_BINS + 1
