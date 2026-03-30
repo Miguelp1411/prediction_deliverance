@@ -68,6 +68,7 @@ from predict import predict_next_week
 from training.engine import evaluate_epoch, fit_model
 from training.losses import OccurrenceLoss, TemporalLoss
 from training.metrics import occurrence_metrics, temporal_metrics
+from utils.runtime import resolve_device
 from utils.serialization import save_checkpoint
 
 
@@ -127,12 +128,6 @@ def configure_runtime(device: torch.device) -> None:
             torch.backends.cuda.matmul.allow_tf32 = ENABLE_TF32
         if hasattr(torch.backends.cudnn, 'allow_tf32'):
             torch.backends.cudnn.allow_tf32 = ENABLE_TF32
-
-
-def resolve_device() -> torch.device:
-    if DEVICE == 'cuda' and torch.cuda.is_available():
-        return torch.device('cuda')
-    return torch.device('cpu')
 
 
 def make_dataloader(dataset, batch_size: int, shuffle: bool, device: torch.device) -> DataLoader:
@@ -428,7 +423,7 @@ def build_occurrence_model(prepared, occ_train: OccurrenceDataset, device: torch
 def main():
     train_start_time = time.perf_counter()
     set_seed(SEED)
-    device = resolve_device()
+    device = resolve_device(DEVICE)
     configure_runtime(device)
     print(f"\nDevice de entrenamiento: {device}")
     if device.type == 'cuda':
@@ -569,7 +564,7 @@ def main():
         monitor_mode='max',
         min_delta=1e-4,
         extra_val_evaluator=e2e_evaluator,
-        extra_val_evaluator_every=1,
+        extra_val_evaluator_every=TMP_E2E_EVAL_EVERY,
         amp_enabled=TMP_USE_AMP,
         amp_dtype=TMP_AMP_DTYPE,
     )

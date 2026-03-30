@@ -78,8 +78,8 @@ class OccurrenceDataset(Dataset):
 
     def __getitem__(self, index: int):
         return {
-            'sequence': torch.tensor(self.sequences[index], dtype=torch.float32),
-            'target_counts': torch.tensor(self.targets[index], dtype=torch.long),
+            'sequence': torch.from_numpy(np.asarray(self.sequences[index], dtype=np.float32)),
+            'target_counts': torch.from_numpy(np.asarray(self.targets[index], dtype=np.int64)),
             'target_week_index': torch.tensor(self.week_indices[index], dtype=torch.long),
         }
 
@@ -159,13 +159,13 @@ class TemporalDataset(Dataset):
     def __getitem__(self, index: int):
         item = self.samples[index]
         return {
-            'sequence': torch.tensor(item['sequence'], dtype=torch.float32),
+            'sequence': torch.from_numpy(np.asarray(item['sequence'], dtype=np.float32)),
             'task_id': torch.tensor(item['task_id'], dtype=torch.long),
             'occurrence_index': torch.tensor(item['occurrence_index'], dtype=torch.long),
             'occurrence_progress': torch.tensor(item['occurrence_progress'], dtype=torch.float32),
             'predicted_count_norm': torch.tensor(item['predicted_count_norm'], dtype=torch.float32),
             'target_count_norm': torch.tensor(item['target_count_norm'], dtype=torch.float32),
-            'history_features': torch.tensor(item['history_features'], dtype=torch.float32),
+            'history_features': torch.from_numpy(np.asarray(item['history_features'], dtype=np.float32)),
             'anchor_start_bin': torch.tensor(item['anchor_start_bin'], dtype=torch.long),
             'anchor_day': torch.tensor(item['anchor_day'], dtype=torch.long),
             'target_start_bin': torch.tensor(item['target_start_bin'], dtype=torch.long),

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from config import BIN_MINUTES, OVERLAP_SCOPE, UNKNOWN_DEVICE_TOKEN
+from config import BIN_MINUTES, UNKNOWN_DEVICE_TOKEN
 from evaluation.matching import hungarian_match
 
 

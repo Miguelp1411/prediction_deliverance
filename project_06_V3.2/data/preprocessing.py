@@ -78,6 +78,7 @@ class PreparedData:
     weeks: list[WeekRecord]
     duration_min: float
     duration_max: float
+    task_duration_medians: dict[str, float]
     max_count_cap: int
     week_feature_dim: int
     history_feature_dim: int
@@ -893,6 +894,10 @@ def prepare_data(
     task_to_id = {name: idx for idx, name in enumerate(task_names)}
     duration_min = float(df['duration_minutes'].min())
     duration_max = float(df['duration_minutes'].max())
+    task_duration_medians = {
+        str(task_name): float(value)
+        for task_name, value in df.groupby('task_name')['duration_minutes'].median().items()
+    }
     df_events = _build_events(df, task_to_id, duration_min, duration_max)
 
     week_starts = _continuous_week_starts(df_events)
@@ -910,6 +915,10 @@ def prepare_data(
 
     weeks: list[WeekRecord] = []
     total_weeks = len(week_starts)
+    grouped_weeks = {
+        week_start: group.copy()
+        for week_start, group in df_events.groupby('week_start', sort=False)
+    }
 
     for week_index, week_start in enumerate(week_starts):
         if show_progress:
@@ -919,7 +928,9 @@ def prepare_data(
                 total_weeks,
             )
 
-        week_df = df_events[df_events['week_start'] == week_start].copy()
+        week_df = grouped_weeks.get(week_start)
+        if week_df is None:
+            week_df = df_events.iloc[0:0].copy()
         weeks.append(
             _compute_week_features(
                 week_df,
@@ -953,6 +964,7 @@ def prepare_data(
         weeks=weeks,
         duration_min=duration_min,
         duration_max=duration_max,
+        task_duration_medians=task_duration_medians,
         max_count_cap=max_count_cap,
         week_feature_dim=int(sample_feature.shape[0]),
         history_feature_dim=int(sample_history.shape[0]),

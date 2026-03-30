@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DATA_PATH = PROJECT_ROOT / 'nexus_schedule_5years.json'
+DATA_PATH = PROJECT_ROOT / 'bases_datos/nexus_schedule_5years.json'
 CHECKPOINT_DIR = PROJECT_ROOT / 'checkpoints'
 
 # ---- Resource-aware scheduling ----
@@ -25,7 +25,7 @@ DEFAULT_MAX_TASKS_PER_WEEK = 100
 CAP_INFERENCE_SCOPE = 'full_dataset'
 
 # ---- Runtime / throughput ----
-DEVICE = 'cuda'
+DEVICE = 'auto'
 CPU_COUNT = os.cpu_count() or 4
 DATALOADER_NUM_WORKERS = min(8, max(0, CPU_COUNT // 2))
 DATALOADER_PIN_MEMORY = True

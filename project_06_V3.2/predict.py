@@ -36,14 +36,8 @@ from data.preprocessing import (
 )
 from models.occurrence_model import StructuredOccurrenceModel, TaskOccurrenceModel
 from models.temporal_model import TemporalAssignmentModel
+from utils.runtime import resolve_device
 from utils.serialization import load_checkpoint
-
-
-def resolve_device(device_name: str | None = None) -> torch.device:
-    chosen = device_name or DEVICE
-    if chosen == 'cuda' and torch.cuda.is_available():
-        return torch.device('cuda')
-    return torch.device('cpu')
 
 
 def _build_sequence(prepared, target_week_idx):
@@ -96,10 +90,7 @@ def _ensure_checkpoint_compatibility(ckpt: dict, prepared, checkpoint_name: str)
 
 
 def _task_duration_median(prepared, task_name: str) -> float:
-    mask = prepared.df['task_name'] == task_name
-    if not mask.any():
-        return float(prepared.duration_min)
-    return float(prepared.df.loc[mask, 'duration_minutes'].median())
+    return float(prepared.task_duration_medians.get(task_name, prepared.duration_min))
 
 
 def _build_candidates(day_logits_row: torch.Tensor, time_logits_row: torch.Tensor) -> list[tuple[int, float]]:
@@ -367,10 +358,15 @@ def main():
     )
     parser.add_argument('--data', type=str, default=str(DATA_PATH), help='Ruta al JSON de datos históricos.')
     parser.add_argument('--output', type=str, default='predicted_next_week.json', help='Ruta del JSON de salida.')
-    parser.add_argument('--device', type=str, default=None, help="Dispositivo: 'cpu' o 'cuda'.")
+    parser.add_argument(
+        '--device',
+        type=str,
+        default=None,
+        help="Dispositivo: 'auto' o cualquier dispositivo valido de torch ('cpu', 'cuda', 'mps', 'xpu'...).",
+    )
     args = parser.parse_args()
 
-    device = resolve_device(args.device)
+    device = resolve_device(args.device or DEVICE)
     df = load_tasks_dataframe(args.data, timezone=TIMEZONE)
     occ_ckpt = load_checkpoint(CHECKPOINT_DIR / 'occurrence_model.pt', map_location=device)
     tmp_ckpt = load_checkpoint(CHECKPOINT_DIR / 'temporal_model.pt', map_location=device)
