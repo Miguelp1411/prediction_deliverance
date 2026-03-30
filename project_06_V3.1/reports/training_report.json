@@ -1,68 +1,73 @@
 {
   "occurrence": {
-    "type": "rule_based",
+    "type": "trainable",
     "metrics": {
-      "count_exact_acc": 12.7551,
-      "count_mae": 5.051,
-      "weekly_total_mae": 10.4898,
-      "presence_f1": 97.5822
+      "count_exact_acc": 55.5556,
+      "count_mae": 0.8472,
+      "weekly_total_mae": 2.5,
+      "presence_f1": 100.0
+    },
+    "meta": {
+      "best_epoch": 321,
+      "monitor_name": "val_loss",
+      "monitor_value": 0.9998
     }
   },
   "temporal": {
     "metrics": {
-      "start_exact_acc": 36.0795,
-      "start_tol_acc_5m": 36.1771,
-      "start_tol_acc_10m": 37.3168,
-      "start_mae_minutes": 497.6962,
-      "duration_mae_minutes": 0.0926
+      "start_exact_acc": 96.4698,
+      "start_tol_acc_5m": 96.7908,
+      "start_tol_acc_10m": 97.4326,
+      "start_mae_minutes": 14.5186,
+      "duration_mae_minutes": 0.068
     },
     "meta": {
-      "best_epoch": 26,
+      "best_epoch": 84,
       "monitor_name": "val_loss",
-      "monitor_value": 2.692
+      "monitor_value": 0.3378
     }
   },
   "ensemble": {
     "metrics": {
-      "task_precision": 84.44,
-      "task_recall": 83.07,
-      "task_f1": 83.75,
-      "time_exact_accuracy": 44.25,
-      "time_close_accuracy_5m": 44.71,
-      "time_close_accuracy_10m": 45.69,
-      "duration_close_accuracy": 83.07,
-      "start_mae_minutes": 245.4096,
-      "overlap_same_device_count": 1168.0
+      "task_precision": 97.4,
+      "task_recall": 98.72,
+      "task_f1": 98.06,
+      "time_exact_accuracy": 96.34,
+      "time_close_accuracy_5m": 96.53,
+      "time_close_accuracy_10m": 96.98,
+      "duration_close_accuracy": 98.72,
+      "start_mae_minutes": 6.7035,
+      "overlap_same_device_count": 1088.0
     }
   },
   "per_task_final": {
     "Assist": {
-      "total": 383.0,
+      "total": 357.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 50.3916
+      "time_exact_accuracy": 99.4398
     },
     "Clean": {
-      "total": 804.0,
+      "total": 481.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 52.7363
+      "time_exact_accuracy": 94.1788
     },
     "Delivery": {
-      "total": 431.0,
+      "total": 294.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 61.7169
+      "time_exact_accuracy": 100.0
     },
     "Patroll": {
-      "total": 933.0,
+      "total": 406.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 51.0182
+      "time_exact_accuracy": 98.2759
     }
   },
   "meta": {
-    "best_epoch_temporal": 26,
+    "best_epoch_temporal": 84,
     "monitor_name": "val_loss",
-    "monitor_value": 2.692,
+    "monitor_value": 0.3378,
     "prediction_use_repair": false,
-    "occurrence_model_kind": "structured_lag4"
+    "occurrence_model_kind": "task_gru"
   },
   "report_path": "/home/miguel/Escritorio/prediction_deliverance/project_06_V3.1/reports/training_report.json"
 }
