@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GestPedidos — Sistema de Pedidos</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "TU_API_KEY",
+    authDomain:        "TU_PROYECTO.firebaseapp.com",
+    projectId:         "TU_PROYECTO_ID",
+    storageBucket:     "TU_PROYECTO.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId:             "TU_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  window._db = db;
+  window._fs = { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy };
+  document.dispatchEvent(new Event("firebase-ready"));
+</script>
+
+<!-- ZXing barcode library -->
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+
+<style>
+  /* ── Variables ──────────────────────────────────────── */
+  :root {
+    --bg:       #0b0c0e;
+    --surface:  #131416;
+    --card:     #1a1c1f;
+    --border:   #2a2d32;
+    --accent:   #f5a623;
+    --accent2:  #e8431a;
+    --green:    #34d399;
+    --red:      #f87171;
+    --blue:     #60a5fa;
+    --yellow:   #fbbf24;
+    --txt:      #e8e9eb;
+    --txt2:     #8b8f96;
+    --mono:     'Space Mono', monospace;
+    --sans:     'Sora', sans-serif;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top:    env(safe-area-inset-top, 0px);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content:'';
+    position: fixed; inset:0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── Header ────────────────────────────────────────── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    padding-top: var(--safe-top);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(64px + var(--safe-top));
+    position: sticky; top:0; z-index:100;
+    background: var(--bg);
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--accent); }
+  .header-meta {
+    font-size: .75rem;
+    color: var(--txt2);
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .status-dot {
+    width:8px; height:8px;
+    border-radius:50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:.5; transform:scale(1.3); }
+  }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+  /* ── Stats ─────────────────────────────────────────── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .stat-card::before {
+    content:'';
+    position: absolute;
+    top:0; left:0; right:0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .stat-label {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--txt2);
+    margin-bottom: .4rem;
+  }
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-value.green { color: var(--green); }
+  .stat-value.blue  { color: var(--blue); }
+  .stat-value.red   { color: var(--red); }
+
+  .section-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+  }
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--txt2);
+  }
+
+  .btn-add {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--sans);
+    font-size: .85rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: .65rem 1.3rem;
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: .03em;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .btn-add:hover { background: #ffc04d; transform: scale(1.03); }
+  .btn-add:active { transform: scale(.97); }
+  .btn-add svg { flex-shrink:0; }
+
+  /* ── Table ──────────────────────────────────────────── */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  table { width:100%; border-collapse:collapse; }
+  thead tr {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    padding: .85rem 1.2rem;
+    text-align: left;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--txt2);
+    font-weight: 600;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+    cursor: pointer;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(245,166,35,.04); }
+  td { padding: .9rem 1.2rem; font-size: .88rem; vertical-align: middle; }
+  .code-badge {
+    font-family: var(--mono);
+    font-size: .8rem;
+    background: rgba(245,166,35,.12);
+    color: var(--accent);
+    border: 1px solid rgba(245,166,35,.3);
+    border-radius: 6px;
+    padding: .2rem .55rem;
+    letter-spacing: .05em;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    border-radius: 20px;
+    padding: .2rem .7rem;
+    font-size: .73rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .status-pill.pending  { background:rgba(251,191,36,.12); color:#fbbf24; }
+  .status-pill.progress { background:rgba(96,165,250,.12); color:#60a5fa; }
+  .status-pill.done     { background:rgba(52,211,153,.12); color:#34d399; }
+  .status-pill.cancelled{ background:rgba(248,113,113,.12); color:#f87171; }
+
+  .row-actions { display:flex; gap:.5rem; }
+  .row-btn {
+    width:34px; height:34px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--txt2);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .row-btn:hover.edit   { color:var(--blue); border-color:var(--blue); background:rgba(96,165,250,.08); }
+  .row-btn:hover.delete { color:var(--red);  border-color:var(--red);  background:rgba(248,113,113,.08); }
+  .row-btn:active { transform:scale(.92); }
+
+  .empty {
+    text-align:center;
+    padding: 4rem 2rem;
+    color: var(--txt2);
+  }
+  .empty-icon { font-size:3rem; margin-bottom:1rem; opacity:.3; }
+  .empty p { font-size:.9rem; }
+
+  /* ── MODALS ─────────────────────────────────────────── */
+  .overlay {
+    position: fixed; inset:0;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index:200;
+    display:flex;
+    align-items: flex-end;         /* mobile: slide from bottom */
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .25s;
+    padding-bottom: var(--safe-bottom);
+  }
+  .overlay.open { opacity:1; pointer-events:all; }
+
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px 22px 0 0;  /* mobile sheet style */
+    width: 100%;
+    max-width: 520px;
+    max-height: 94vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateY(48px) scale(.98);
+    transition: transform .32s cubic-bezier(.34,1.4,.64,1), opacity .25s;
+    opacity:0;
+  }
+  .overlay.open .modal { transform: none; opacity:1; }
+
+  /* Desktop: center as card */
+  @media(min-width:600px){
+    .overlay { align-items:center; }
+    .modal {
+      border-radius: 18px;
+      max-height: 92vh;
+    }
+  }
+
+  /* Drag handle for mobile sheet */
+  .modal-handle {
+    width:40px; height:4px;
+    border-radius:4px;
+    background:var(--border);
+    margin:12px auto 0;
+    display:block;
+  }
+  @media(min-width:600px){ .modal-handle { display:none; } }
+
+  .modal-header {
+    padding: 1.2rem 1.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top:0;
+    background: var(--card);
+    z-index:1;
+  }
+  .modal-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+  .modal-close {
+    width:36px; height:36px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--txt2);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem;
+    transition:all .2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .modal-close:hover { color:var(--txt); background:var(--border); }
+  .modal-close:active { transform:scale(.9); }
+
+  .modal-body { padding: 1.4rem 1.6rem 2rem; }
+
+  /* ── Scanner modal ──────────────────────────────────── */
+  .scanner-modal { max-width: 580px; }
+
+  /* ══════════════════════════════════════════════════════
+     PERMISSION STATES — the core new feature
+     States: check | request | scanning | denied | unsupported | error
+     ══════════════════════════════════════════════════════ */
+
+  .perm-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.5rem 0 .5rem;
+    gap: 1rem;
+  }
+  .perm-screen.active { display: flex; }
+
+  .perm-icon {
+    font-size: 3.5rem;
+    line-height: 1;
+  }
+  .perm-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+  .perm-body {
+    font-size: .85rem;
+    color: var(--txt2);
+    line-height: 1.65;
+    max-width: 340px;
+  }
+  .perm-body strong { color: var(--txt); }
+
+  /* Steps list */
+  .perm-steps {
+    list-style: none;
+    width: 100%;
+    max-width: 340px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+  }
+  .perm-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    font-size: .83rem;
+    color: var(--txt2);
+    line-height: 1.5;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+  }
+  .perm-steps li .step-num {
+    flex-shrink: 0;
+    width:20px; height:20px;
+    border-radius:50%;
+    background: rgba(245,166,35,.15);
+    border: 1px solid rgba(245,166,35,.35);
+    color: var(--accent);
+    font-size: .7rem;
+    font-weight: 700;
+    font-family: var(--mono);
+    display: flex; align-items:center; justify-content:center;
+    margin-top:1px;
+  }
+
+  /* OS badge */
+  .os-tabs {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: .2rem;
+  }
+  .os-tab {
+    flex:1;
+    padding: .45rem .8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--txt2);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .os-tab.active {
+    background: rgba(245,166,35,.12);
+    border-color: rgba(245,166,35,.4);
+    color: var(--accent);
+  }
+
+  /* Alert banner */
+  .perm-alert {
+    width:100%;
+    max-width:340px;
+    border-radius:10px;
+    padding:.85rem 1rem;
+    font-size:.82rem;
+    line-height:1.55;
+    display:flex; gap:.7rem; align-items:flex-start;
+  }
+  .perm-alert.warn { background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.25); color:var(--yellow); }
+  .perm-alert.danger { background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.25); color:var(--red); }
+  .perm-alert.info { background:rgba(96,165,250,.08); border:1px solid rgba(96,165,250,.25); color:var(--blue); }
+  .perm-alert-icon { font-size:1.1rem; flex-shrink:0; margin-top:1px; }
+  .perm-alert-text { flex:1; }
+
+  /* ── Spinner screen (checking perms) ────────────────── */
+  .check-spinner {
+    width:36px; height:36px;
+    border:3px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+  }
+
+  /* ── Camera view ────────────────────────────────────── */
+  #cam-section { display:none; }
+  #cam-section.active { display:block; }
+
+  .cam-wrap {
+    position:relative;
+    border-radius:12px;
+    overflow:hidden;
+    background:#000;
+    aspect-ratio:4/3;
+    margin-bottom:1rem;
+  }
+  #cam-video {
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .scan-overlay {
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .scan-frame {
+    width:220px; height:100px;
+    border:2px solid var(--accent);
+    border-radius:8px;
+    position:relative;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,.45);
+  }
+  .scan-frame::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    animation: scan-line 2s linear infinite;
+  }
+  @keyframes scan-line {
+    0%  { top:0; opacity:1; }
+    90% { top:calc(100% - 2px); opacity:1; }
+    100%{ top:calc(100% - 2px); opacity:0; }
+  }
+  .corner { position:absolute; width:14px; height:14px; }
+  .corner.tl { top:-1px; left:-1px;  border-top:3px solid #fff;   border-left:3px solid #fff; }
+  .corner.tr { top:-1px; right:-1px; border-top:3px solid #fff;   border-right:3px solid #fff; }
+  .corner.bl { bottom:-1px; left:-1px; border-bottom:3px solid #fff; border-left:3px solid #fff; }
+  .corner.br { bottom:-1px; right:-1px;border-bottom:3px solid #fff; border-right:3px solid #fff;}
+
+  .scan-status {
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+    font-size:.78rem; color:var(--txt2); margin-bottom:.8rem;
+  }
+  .scan-status .dot {
+    width:7px; height:7px; border-radius:50%;
+    background:var(--accent);
+    animation: pulse 1.5s infinite;
+  }
+  .scan-status.error .dot { background:var(--red); animation:none; }
+  .scan-status.success .dot { background:var(--green); animation:none; }
+
+  .scan-result {
+    display:none;
+    text-align:center;
+    padding:1rem;
+    background:rgba(52,211,153,.08);
+    border:1px solid rgba(52,211,153,.3);
+    border-radius:10px;
+    margin-bottom:1rem;
+  }
+  .scan-result.visible { display:block; }
+  .scan-result-code {
+    font-family:var(--mono);
+    font-size:2rem;
+    font-weight:700;
+    color:var(--green);
+    letter-spacing:.2em;
+  }
+  .scan-result-label { font-size:.75rem; color:var(--txt2); margin-top:.25rem; }
+
+  .divider {
+    display:flex; align-items:center; gap:.8rem;
+    margin:.8rem 0;
+    color:var(--txt2); font-size:.75rem;
+  }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .manual-wrap { display:flex; gap:.6rem; }
+  .inp-code {
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--txt);
+    font-family:var(--mono);
+    font-size:1.1rem;
+    letter-spacing:.2em;
+    padding:.7rem 1rem;
+    text-align:center;
+    transition:border-color .2s;
+    outline:none;
+  }
+  .inp-code:focus { border-color:var(--accent); }
+
+  /* ── Form ───────────────────────────────────────────── */
+  .form-group { margin-bottom:1.2rem; }
+  .form-label {
+    display:block;
+    font-size:.75rem;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--txt2);
+    margin-bottom:.45rem;
+    font-weight:600;
+  }
+  .form-input, .form-select, .form-textarea {
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:9px;
+    color:var(--txt);
+    font-family:var(--sans);
+    font-size:.9rem;
+    padding:.75rem 1rem;
+    transition:border-color .2s, box-shadow .2s;
+    outline:none;
+    appearance:none;
+    -webkit-appearance:none;
+  }
+  .form-input:focus,.form-select:focus,.form-textarea:focus {
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(245,166,35,.1);
+  }
+  .form-textarea { resize:vertical; min-height:90px; }
+  .form-select option { background:var(--card); }
+  .code-display {
+    background:var(--surface);
+    border:1px solid rgba(245,166,35,.35);
+    border-radius:9px;
+    padding:.75rem 1rem;
+    font-family:var(--mono);
+    font-size:1.1rem;
+    letter-spacing:.2em;
+    color:var(--accent);
+    text-align:center;
+  }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  .btn-primary {
+    width:100%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#000;
+    font-family:var(--sans);
+    font-size:.9rem;
+    font-weight:700;
+    border:none;
+    border-radius:10px;
+    padding:.9rem;
+    cursor:pointer;
+    letter-spacing:.04em;
+    transition:all .2s;
+    margin-top:.5rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .btn-primary:hover { transform:translateY(-1px); filter:brightness(1.1); }
+  .btn-primary:active { transform:scale(.98); }
+
+  .btn-secondary {
+    width:100%;
+    background:transparent;
+    color:var(--txt2);
+    font-family:var(--sans);
+    font-size:.85rem;
+    font-weight:500;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:.8rem;
+    cursor:pointer;
+    transition:all .2s;
+    margin-top:.5rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .btn-secondary:hover { color:var(--txt); border-color:var(--txt2); }
+
+  /* ── Detail ─────────────────────────────────────────── */
+  .detail-section {
+    background:var(--surface);
+    border-radius:10px;
+    padding:1rem 1.2rem;
+    margin-bottom:1rem;
+  }
+  .detail-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:.4rem 0;
+    border-bottom:1px solid var(--border);
+    font-size:.88rem;
+  }
+  .detail-row:last-child { border-bottom:none; }
+  .detail-key { color:var(--txt2); }
+  .detail-val { font-weight:500; text-align:right; }
+
+  /* ── Toast ──────────────────────────────────────────── */
+  .toast-container {
+    position:fixed;
+    bottom: max(2rem, calc(var(--safe-bottom) + 1rem));
+    right:1.5rem;
+    display:flex; flex-direction:column; gap:.6rem;
+    z-index:500;
+  }
+  .toast {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:.8rem 1.2rem;
+    font-size:.85rem;
+    display:flex; align-items:center; gap:.7rem;
+    box-shadow:0 8px 32px rgba(0,0,0,.4);
+    animation: slide-in .3s ease;
+    max-width:300px;
+  }
+  .toast.success { border-left:3px solid var(--green); }
+  .toast.error   { border-left:3px solid var(--red); }
+  @keyframes slide-in {
+    from{ transform:translateX(110%); opacity:0; }
+    to  { transform:none; opacity:1; }
+  }
+
+  /* ── Loading ─────────────────────────────────────────── */
+  .loading-row td {
+    text-align:center; padding:3rem;
+    color:var(--txt2); font-size:.85rem;
+  }
+  .spinner {
+    display:inline-block; width:20px; height:20px;
+    border:2px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    margin-right:.5rem; vertical-align:middle;
+  }
+  @keyframes spin { to{ transform:rotate(360deg); } }
+
+  /* ── Responsive ──────────────────────────────────────── */
+  @media(max-width:640px){
+    main { padding:1rem; }
+    .form-row { grid-template-columns:1fr; }
+    th:nth-child(4),td:nth-child(4){ display:none; }
+    th:nth-child(5),td:nth-child(5){ display:none; }
+  }
+  @media(max-width:400px){
+    .toast-container { left:1rem; right:1rem; }
+    .toast { max-width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Header ─────────────────────────────────────────── -->
+<header>
+  <div class="logo">GEST<span>PEDIDOS</span></div>
+  <div class="header-meta">
+    <div class="status-dot"></div>
+    <span id="firebase-status">Conectando…</span>
+  </div>
+</header>
+
+<!-- ─── Main ───────────────────────────────────────────── -->
+<main>
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Pedidos</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pendientes</div>
+      <div class="stat-value" id="stat-pending">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">En curso</div>
+      <div class="stat-value blue" id="stat-progress">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Completados</div>
+      <div class="stat-value green" id="stat-done">—</div>
+    </div>
+  </div>
+
+  <div class="section-top">
+    <div class="section-title">Pedidos</div>
+    <button class="btn-add" onclick="openScanner()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo Pedido
+    </button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descripción</th>
+          <th>Cliente</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="orders-tbody">
+        <tr class="loading-row"><td colspan="7"><span class="spinner"></span>Cargando pedidos…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL 1: SCANNER  (with full permission flow)
+     ══════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay-scanner">
+  <div class="modal scanner-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">📷 Escanear Código</div>
+      <button class="modal-close" onclick="closeScanner()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- ── STATE: checking ───────────────────────────── -->
+      <div class="perm-screen" id="perm-checking">
+        <div class="check-spinner"></div>
+        <div class="perm-title">Verificando cámara…</div>
+        <div class="perm-body">Comprobando permisos del dispositivo.</div>
+      </div>
+
+      <!-- ── STATE: request ────────────────────────────── -->
+      <div class="perm-screen" id="perm-request">
+        <div class="perm-icon">📸</div>
+        <div class="perm-title">Permiso de cámara</div>
+        <div class="perm-body">
+          Para escanear el código de barras necesitamos acceder a tu cámara.<br>
+          <strong>Solo se usa mientras el escáner está activo.</strong>
+        </div>
+        <div class="perm-alert info">
+          <span class="perm-alert-icon">ℹ️</span>
+          <span class="perm-alert-text">Aparecerá un aviso del sistema. Pulsa <strong>Permitir</strong> para continuar.</span>
+        </div>
+        <button class="btn-primary" onclick="requestCameraPermission()" style="max-width:300px;margin-top:.2rem">
+          📷 Activar cámara
+        </button>
+        <button class="btn-secondary" onclick="skipToManual()" style="max-width:300px;margin-top:0">
+          Introducir código a mano
+        </button>
+      </div>
+
+      <!-- ── STATE: denied ─────────────────────────────── -->
+      <div class="perm-screen" id="perm-denied">
+        <div class="perm-icon">🚫</div>
+        <div class="perm-title">Cámara bloqueada</div>
+        <div class="perm-body">
+          El acceso a la cámara está denegado. Sigue estos pasos según tu dispositivo para habilitarlo:
+        </div>
+
+        <!-- OS selector (auto-detected, switchable) -->
+        <div class="os-tabs">
+          <button class="os-tab" id="tab-ios"     onclick="showDeniedSteps('ios')">🍎 iPhone / iPad</button>
+          <button class="os-tab" id="tab-android" onclick="showDeniedSteps('android')">🤖 Android</button>
+          <button class="os-tab" id="tab-desktop" onclick="showDeniedSteps('desktop')">💻 Escritorio</button>
+        </div>
+
+        <!-- iOS steps -->
+        <ul class="perm-steps" id="steps-ios" style="display:none">
+          <li><span class="step-num">1</span><span>Abre la app <strong>Ajustes</strong> de tu iPhone o iPad.</span></li>
+          <li><span class="step-num">2</span><span>Desplázate hasta <strong>Safari</strong> (o el navegador que uses) y púlsalo.</span></li>
+          <li><span class="step-num">3</span><span>Dentro de «Ajustes para sitios web», pulsa <strong>Cámara</strong>.</span></li>
+          <li><span class="step-num">4</span><span>Selecciona <strong>Permitir</strong> y vuelve aquí.</span></li>
+        </ul>
+
+        <!-- Android steps -->
+        <ul class="perm-steps" id="steps-android" style="display:none">
+          <li><span class="step-num">1</span><span>Toca el icono 🔒 en la barra de dirección de Chrome.</span></li>
+          <li><span class="step-num">2</span><span>Pulsa <strong>Permisos</strong> → <strong>Cámara</strong>.</span></li>
+          <li><span class="step-num">3</span><span>Selecciona <strong>Permitir</strong> y recarga la página si es necesario.</span></li>
+          <li><span class="step-num">4</span><span>Si no aparece la opción, ve a <strong>Ajustes → Aplicaciones → Chrome → Permisos</strong>.</span></li>
+        </ul>
+
+        <!-- Desktop steps -->
+        <ul class="perm-steps" id="steps-desktop" style="display:none">
+          <li><span class="step-num">1</span><span>Haz clic en el icono 🔒 o 📷 que aparece en la barra de dirección.</span></li>
+          <li><span class="step-num">2</span><span>Busca <strong>Cámara</strong> en la lista de permisos.</span></li>
+          <li><span class="step-num">3</span><span>Cambia de «Bloqueado» a <strong>Permitir</strong>.</span></li>
+          <li><span class="step-num">4</span><span>Recarga esta página y vuelve a intentarlo.</span></li>
+        </ul>
+
+        <button class="btn-primary" onclick="requestCameraPermission()" style="max-width:300px;margin-top:.4rem">
+          🔄 Reintentar
+        </button>
+        <button class="btn-secondary" onclick="skipToManual()" style="max-width:300px;margin-top:0">
+          Introducir código a mano
+        </button>
+      </div>
+
+      <!-- ── STATE: unsupported ─────────────────────────── -->
+      <div class="perm-screen" id="perm-unsupported">
+        <div class="perm-icon">🌐</div>
+        <div class="perm-title">Cámara no disponible</div>
+        <div class="perm-body">Tu navegador o dispositivo no soporta el acceso a la cámara.</div>
+        <div class="perm-alert warn">
+          <span class="perm-alert-icon">⚠️</span>
+          <span class="perm-alert-text">
+            Usa <strong>Safari</strong> en iPhone, <strong>Chrome</strong> en Android, o asegúrate de que la página usa <strong>HTTPS</strong>.
+          </span>
+        </div>
+      </div>
+
+      <!-- ── STATE: error ───────────────────────────────── -->
+      <div class="perm-screen" id="perm-error">
+        <div class="perm-icon">⚠️</div>
+        <div class="perm-title" id="perm-error-title">Error de cámara</div>
+        <div class="perm-body" id="perm-error-body">Ha ocurrido un problema al acceder a la cámara.</div>
+        <div class="perm-alert danger" id="perm-error-detail" style="display:none">
+          <span class="perm-alert-icon">🔍</span>
+          <span class="perm-alert-text" id="perm-error-detail-text"></span>
+        </div>
+        <button class="btn-primary" onclick="requestCameraPermission()" style="max-width:300px;margin-top:.4rem">
+          🔄 Reintentar
+        </button>
+        <button class="btn-secondary" onclick="skipToManual()" style="max-width:300px;margin-top:0">
+          Introducir código a mano
+        </button>
+      </div>
+
+      <!-- ── STATE: scanning (camera active) ───────────── -->
+      <div id="cam-section">
+        <div class="cam-wrap">
+          <video id="cam-video" autoplay muted playsinline webkit-playsinline></video>
+          <div class="scan-overlay">
+            <div class="scan-frame">
+              <div class="corner tl"></div><div class="corner tr"></div>
+              <div class="corner bl"></div><div class="corner br"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scan-status" id="scan-status">
+          <div class="dot"></div>
+          <span id="scan-status-text">Buscando código de 5 dígitos…</span>
+        </div>
+
+        <div class="scan-result" id="scan-result">
+          <div class="scan-result-code" id="scan-result-code">—</div>
+          <div class="scan-result-label">✓ Código detectado</div>
+        </div>
+      </div>
+
+      <!-- ── Manual entry (always visible after initial check) -->
+      <div id="manual-section" style="display:none">
+        <div class="divider">o introduce manualmente</div>
+        <div class="manual-wrap">
+          <input class="inp-code" id="manual-code" type="text" inputmode="numeric"
+                 maxlength="5" placeholder="00000"
+                 oninput="this.value=this.value.replace(/\D/g,'').slice(0,5)">
+          <button class="btn-add" onclick="confirmManualCode()" style="border-radius:8px;flex-shrink:0;padding:.7rem 1.1rem;min-height:48px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            OK
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL 2: FORM
+     ══════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay-form">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="form-title">➕ Nuevo Pedido</div>
+      <button class="modal-close" onclick="closeForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Código Escaneado</label>
+        <div class="code-display" id="form-code-display">—</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción *</label>
+        <input class="form-input" id="f-desc" type="text" placeholder="Descripción del pedido">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <input class="form-input" id="f-client" type="text" placeholder="Nombre del cliente">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="f-phone" type="tel" placeholder="+34 600 000 000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="f-status">
+            <option value="pending">⏳ Pendiente</option>
+            <option value="progress">🔵 En curso</option>
+            <option value="done">✅ Completado</option>
+            <option value="cancelled">❌ Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridad</label>
+          <select class="form-select" id="f-priority">
+            <option value="normal">Normal</option>
+            <option value="high">Alta</option>
+            <option value="urgent">Urgente</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Importe (€)</label>
+        <input class="form-input" id="f-amount" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="Notas adicionales…"></textarea>
+      </div>
+      <button class="btn-primary" id="form-submit-btn" onclick="submitOrder()">Guardar Pedido</button>
+      <button class="btn-secondary" onclick="closeForm()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL 3: DETAIL
+     ══════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">📋 Detalle del Pedido</div>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     LOGIC
+     ══════════════════════════════════════════════════════ -->
+<script>
+// ── State ────────────────────────────────────────────────
+let scannedCode  = null;
+let editingId    = null;
+let cameraStream = null;
+let orders       = [];
+
+// ── Detect platform ──────────────────────────────────────
+const UA        = navigator.userAgent || '';
+const isIOS     = /iPad|iPhone|iPod/.test(UA) && !window.MSStream;
+const isAndroid = /Android/.test(UA);
+const isMobile  = isIOS || isAndroid;
+
+// ── Firebase ─────────────────────────────────────────────
+document.addEventListener('firebase-ready', () => {
+  document.getElementById('firebase-status').textContent = 'Firebase OK';
+  listenOrders();
+});
+
+function listenOrders() {
+  const { collection, onSnapshot, query, orderBy } = window._fs;
+  const q = query(collection(window._db,'pedidos'), orderBy('createdAt','desc'));
+  onSnapshot(q, snap => {
+    orders = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderTable();
+    updateStats();
+  }, err => {
+    toast('Error al cargar: ' + err.message, 'error');
+    document.getElementById('firebase-status').textContent = '⚠️ Error';
+  });
+}
+
+// ── Table ────────────────────────────────────────────────
+function renderTable() {
+  const tb = document.getElementById('orders-tbody');
+  if (!orders.length) {
+    tb.innerHTML = `<tr><td colspan="7"><div class="empty">
+      <div class="empty-icon">📦</div>
+      <p>No hay pedidos todavía.<br>Pulsa <strong>Nuevo Pedido</strong> para empezar.</p>
+    </div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = orders.map(o => {
+    const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('es-ES') : '—';
+    return `
+    <tr onclick="openDetail('${o.id}')">
+      <td><span class="code-badge">${o.code || '—'}</span></td>
+      <td>${o.desc || '—'}</td>
+      <td>${o.client || '—'}</td>
+      <td>${priorityLabel(o.priority)}</td>
+      <td>${statusPill(o.status)}</td>
+      <td style="font-size:.78rem;color:var(--txt2)">${date}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-actions">
+          <button class="row-btn edit" title="Editar" onclick="openEditForm('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="row-btn delete" title="Eliminar" onclick="deleteOrder('${o.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function statusPill(s) {
+  const map = {
+    pending:  ['pending',  '⏳ Pendiente'],
+    progress: ['progress','🔵 En curso'],
+    done:     ['done',    '✅ Completado'],
+    cancelled:['cancelled','❌ Cancelado'],
+  };
+  const [cls,lbl] = map[s] || ['pending','⏳ Pendiente'];
+  return `<span class="status-pill ${cls}">${lbl}</span>`;
+}
+function priorityLabel(p) {
+  const map = { normal:'Normal', high:'🔶 Alta', urgent:'🔴 Urgente' };
+  return map[p] || 'Normal';
+}
+function updateStats() {
+  document.getElementById('stat-total').textContent    = orders.length;
+  document.getElementById('stat-pending').textContent  = orders.filter(o=>o.status==='pending').length;
+  document.getElementById('stat-progress').textContent = orders.filter(o=>o.status==='progress').length;
+  document.getElementById('stat-done').textContent     = orders.filter(o=>o.status==='done').length;
+}
+
+// ════════════════════════════════════════════════════════
+// SCANNER + PERMISSION MANAGER
+// ════════════════════════════════════════════════════════
+
+/** Show one perm-screen, hide the rest, show/hide cam-section & manual */
+function showPermScreen(name) {
+  const screens = ['perm-checking','perm-request','perm-denied','perm-unsupported','perm-error'];
+  screens.forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', id === name);
+  });
+  const camSection    = document.getElementById('cam-section');
+  const manualSection = document.getElementById('manual-section');
+
+  if (name === 'scanning') {
+    screens.forEach(id => document.getElementById(id).classList.remove('active'));
+    camSection.classList.add('active');
+    manualSection.style.display = 'block';
+  } else {
+    camSection.classList.remove('active');
+    // Always show manual entry once we've finished checking (any state except initial check)
+    manualSection.style.display = (name === 'perm-checking') ? 'none' : 'block';
+  }
+}
+
+/** Auto-detect OS for denied instructions */
+function showDeniedSteps(os) {
+  ['ios','android','desktop'].forEach(k => {
+    document.getElementById('steps-'+k).style.display   = (k===os) ? 'flex' : 'none';
+    document.getElementById('tab-'+k).classList.toggle('active', k===os);
+  });
+}
+
+function detectAndShowDeniedOS() {
+  const os = isIOS ? 'ios' : isAndroid ? 'android' : 'desktop';
+  showDeniedSteps(os);
+}
+
+/** Open the scanner modal — entry point */
+async function openScanner() {
+  scannedCode = null;
+  editingId   = null;
+  document.getElementById('scan-result').classList.remove('visible');
+  document.getElementById('manual-code').value = '';
+  document.getElementById('manual-section').style.display = 'none';
+
+  document.getElementById('overlay-scanner').classList.add('open');
+
+  // 1. Check if getUserMedia is available at all
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showPermScreen('perm-unsupported');
+    return;
+  }
+
+  // 2. Use Permissions API (where available) to check current state
+  showPermScreen('perm-checking');
+
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      const status = await navigator.permissions.query({ name: 'camera' });
+
+      if (status.state === 'granted') {
+        // Already granted — go straight to camera
+        await startCamera();
+      } else if (status.state === 'denied') {
+        // Definitively denied — show instructions
+        showPermScreen('perm-denied');
+        detectAndShowDeniedOS();
+      } else {
+        // 'prompt' — show our request screen first (better UX than immediate browser prompt)
+        showPermScreen('perm-request');
+      }
+
+      // Listen for changes (e.g. user enables in settings while modal is open)
+      status.addEventListener('change', () => {
+        if (status.state === 'granted') startCamera();
+        if (status.state === 'denied') { showPermScreen('perm-denied'); detectAndShowDeniedOS(); }
+      });
+
+    } else {
+      // Permissions API not available (iOS Safari < 16 etc.) — go straight to request
+      showPermScreen('perm-request');
+    }
+  } catch(e) {
+    // Permissions API blocked — try requesting directly
+    showPermScreen('perm-request');
+  }
+}
+
+/** Called when user taps "Activar cámara" button */
+async function requestCameraPermission() {
+  showPermScreen('perm-checking');
+  await startCamera();
+}
+
+/** Close scanner and release camera */
+function closeScanner() {
+  stopCamera();
+  document.getElementById('overlay-scanner').classList.remove('open');
+}
+
+/** Core camera start with detailed error handling */
+async function startCamera() {
+  try {
+    stopCamera(); // clean up any previous stream
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showPermScreen('perm-unsupported');
+      return;
+    }
+
+    // Constraints optimized for mobile barcode scanning
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },   // rear camera on mobile
+        width:  { ideal: 1280, min: 640 },
+        height: { ideal: 720,  min: 480 },
+        focusMode: { ideal: 'continuous' },       // autofocus (ignored if unsupported)
+      }
+    };
+
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    cameraStream = stream;
+
+    const video = document.getElementById('cam-video');
+    video.srcObject = stream;
+
+    // iOS Safari requires manual play() call
+    await video.play().catch(e => console.warn('play() warn:', e));
+
+    showPermScreen('scanning');
+    setScanStatus('scanning', 'Buscando código de 5 dígitos…');
+    decodeLoop(video);
+
+  } catch(err) {
+    handleCameraError(err);
+  }
+}
+
+/** Map DOMException names to friendly messages */
+function handleCameraError(err) {
+  const name = err.name || '';
+
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    showPermScreen('perm-denied');
+    detectAndShowDeniedOS();
+    return;
+  }
+
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    showPermScreen('perm-unsupported');
+    return;
+  }
+
+  if (name === 'NotReadableError' || name === 'TrackStartError') {
+    showCameraError(
+      'Cámara en uso',
+      'La cámara está siendo utilizada por otra aplicación. Ciérrala e inténtalo de nuevo.',
+      err.message
+    );
+    return;
+  }
+
+  if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+    // Retry with relaxed constraints
+    retryWithBasicConstraints();
+    return;
+  }
+
+  if (name === 'SecurityError') {
+    showCameraError(
+      'Conexión no segura',
+      'La cámara solo funciona en páginas HTTPS. Asegúrate de que la URL comienza por https://',
+      err.message
+    );
+    return;
+  }
+
+  if (name === 'AbortError') {
+    showCameraError(
+      'Acceso cancelado',
+      'Se canceló el acceso a la cámara. Pulsa Reintentar para volver a intentarlo.',
+      err.message
+    );
+    return;
+  }
+
+  // Unknown error
+  showCameraError(
+    'Error inesperado',
+    'No se pudo iniciar la cámara. Prueba a recargar la página.',
+    `${name}: ${err.message}`
+  );
+}
+
+/** Retry with minimal constraints (some older Android devices fail with ideal constraints) */
+async function retryWithBasicConstraints() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    cameraStream = stream;
+    const video = document.getElementById('cam-video');
+    video.srcObject = stream;
+    await video.play().catch(e => console.warn(e));
+    showPermScreen('scanning');
+    setScanStatus('scanning', 'Buscando código de 5 dígitos…');
+    decodeLoop(video);
+  } catch(err2) {
+    handleCameraError(err2);
+  }
+}
+
+function showCameraError(title, body, detail) {
+  document.getElementById('perm-error-title').textContent = title;
+  document.getElementById('perm-error-body').textContent  = body;
+  const detailEl  = document.getElementById('perm-error-detail');
+  const detailTxt = document.getElementById('perm-error-detail-text');
+  if (detail) {
+    detailTxt.textContent = detail;
+    detailEl.style.display = 'flex';
+  } else {
+    detailEl.style.display = 'none';
+  }
+  showPermScreen('perm-error');
+}
+
+/** Barcode decode loop */
+function decodeLoop(video) {
+  if (!cameraStream) return;
+
+  const hints = new Map();
+  if (window.ZXing) {
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+      ZXing.BarcodeFormat.CODE_39,
+      ZXing.BarcodeFormat.CODE_128,
+      ZXing.BarcodeFormat.EAN_8,
+      ZXing.BarcodeFormat.ITF,
+    ]);
+  }
+
+  const reader = window.ZXing ? new ZXing.BrowserMultiFormatReader(hints) : null;
+  const canvas = document.createElement('canvas');
+  const ctx    = canvas.getContext('2d');
+
+  function tick() {
+    if (!cameraStream || video.readyState < 2) { setTimeout(tick, 200); return; }
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    if (reader) {
+      try {
+        const result = reader.decodeFromCanvas(canvas);
+        if (result) {
+          const text = result.getText().replace(/\D/g,'');
+          if (text.length === 5) { handleScannedCode(text); return; }
+        }
+      } catch(e) { /* continue */ }
+    }
+    setTimeout(tick, 300);
+  }
+  tick();
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  const video = document.getElementById('cam-video');
+  video.srcObject = null;
+}
+
+function setScanStatus(type, msg) {
+  const el  = document.getElementById('scan-status');
+  const txt = document.getElementById('scan-status-text');
+  el.className = 'scan-status ' + (type || '');
+  txt.textContent = msg;
+}
+
+function handleScannedCode(code) {
+  scannedCode = code;
+  stopCamera();
+  setScanStatus('success', '✓ Código detectado correctamente');
+  const resultEl = document.getElementById('scan-result');
+  document.getElementById('scan-result-code').textContent = code;
+  resultEl.classList.add('visible');
+  setTimeout(() => { closeScanner(); openForm(code); }, 1200);
+}
+
+function skipToManual() {
+  stopCamera();
+  showPermScreen('perm-request'); // hide camera screens
+  // Just show manual entry
+  ['perm-checking','perm-request','perm-denied','perm-unsupported','perm-error'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+  document.getElementById('cam-section').classList.remove('active');
+  document.getElementById('manual-section').style.display = 'block';
+}
+
+function confirmManualCode() {
+  const val = document.getElementById('manual-code').value.trim();
+  if (val.length !== 5) { toast('El código debe tener exactamente 5 dígitos','error'); return; }
+  handleScannedCode(val);
+}
+
+// ── Form ─────────────────────────────────────────────────
+function openForm(code) {
+  document.getElementById('form-title').textContent       = '➕ Nuevo Pedido';
+  document.getElementById('form-code-display').textContent = code;
+  document.getElementById('form-submit-btn').textContent  = 'Guardar Pedido';
+  clearForm();
+  editingId   = null;
+  scannedCode = code;
+  document.getElementById('overlay-form').classList.add('open');
+}
+
+function openEditForm(id) {
+  const order = orders.find(o=>o.id===id);
+  if (!order) return;
+  editingId   = id;
+  scannedCode = order.code;
+  document.getElementById('form-title').textContent       = '✏️ Editar Pedido';
+  document.getElementById('form-code-display').textContent = order.code;
+  document.getElementById('form-submit-btn').textContent  = 'Actualizar Pedido';
+  document.getElementById('f-desc').value     = order.desc     || '';
+  document.getElementById('f-client').value   = order.client   || '';
+  document.getElementById('f-phone').value    = order.phone    || '';
+  document.getElementById('f-status').value   = order.status   || 'pending';
+  document.getElementById('f-priority').value = order.priority || 'normal';
+  document.getElementById('f-amount').value   = order.amount   || '';
+  document.getElementById('f-notes').value    = order.notes    || '';
+  document.getElementById('overlay-form').classList.add('open');
+}
+
+function closeForm() { document.getElementById('overlay-form').classList.remove('open'); }
+
+function clearForm() {
+  ['f-desc','f-client','f-phone','f-amount','f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value   = 'pending';
+  document.getElementById('f-priority').value = 'normal';
+}
+
+async function submitOrder() {
+  const desc = document.getElementById('f-desc').value.trim();
+  if (!desc) { toast('La descripción es obligatoria','error'); return; }
+
+  const data = {
+    code:     scannedCode,
+    desc,
+    client:   document.getElementById('f-client').value.trim(),
+    phone:    document.getElementById('f-phone').value.trim(),
+    status:   document.getElementById('f-status').value,
+    priority: document.getElementById('f-priority').value,
+    amount:   parseFloat(document.getElementById('f-amount').value) || 0,
+    notes:    document.getElementById('f-notes').value.trim(),
+  };
+
+  const btn = document.getElementById('form-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando…';
+
+  try {
+    const { collection, addDoc, doc, updateDoc, serverTimestamp } = window._fs;
+    const db = window._db;
+    if (editingId) {
+      await updateDoc(doc(db,'pedidos',editingId), { ...data, updatedAt: serverTimestamp() });
+      toast('Pedido actualizado ✓','success');
+    } else {
+      await addDoc(collection(db,'pedidos'), { ...data, createdAt: serverTimestamp() });
+      toast('Pedido guardado ✓','success');
+    }
+    closeForm();
+  } catch(err) {
+    toast('Error al guardar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingId ? 'Actualizar Pedido' : 'Guardar Pedido';
+  }
+}
+
+// ── Delete ───────────────────────────────────────────────
+async function deleteOrder(id) {
+  if (!confirm('¿Eliminar este pedido?')) return;
+  try {
+    const { doc, deleteDoc } = window._fs;
+    await deleteDoc(doc(window._db,'pedidos',id));
+    toast('Pedido eliminado','success');
+  } catch(err) {
+    toast('Error: '+err.message,'error');
+  }
+}
+
+// ── Detail ───────────────────────────────────────────────
+function openDetail(id) {
+  const o = orders.find(o=>o.id===id);
+  if (!o) return;
+  const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString('es-ES') : '—';
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-row"><span class="detail-key">Código</span><span class="detail-val"><span class="code-badge">${o.code}</span></span></div>
+      <div class="detail-row"><span class="detail-key">Estado</span><span class="detail-val">${statusPill(o.status)}</span></div>
+      <div class="detail-row"><span class="detail-key">Prioridad</span><span class="detail-val">${priorityLabel(o.priority)}</span></div>
+      <div class="detail-row"><span class="detail-key">Descripción</span><span class="detail-val">${o.desc||'—'}</span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-row"><span class="detail-key">Cliente</span><span class="detail-val">${o.client||'—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Teléfono</span><span class="detail-val">${o.phone||'—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Importe</span><span class="detail-val">${o.amount ? o.amount.toFixed(2)+' €' : '—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Fecha</span><span class="detail-val">${date}</span></div>
+    </div>
+    ${o.notes ? `<div class="detail-section"><div class="detail-key" style="margin-bottom:.5rem">Notas</div><div style="font-size:.88rem;line-height:1.6">${o.notes}</div></div>` : ''}
+    <button class="btn-primary" onclick="closeDetail();openEditForm('${o.id}')">✏️ Editar Pedido</button>
+  `;
+  document.getElementById('overlay-detail').classList.add('open');
+}
+function closeDetail() { document.getElementById('overlay-detail').classList.remove('open'); }
+
+// ── Close on backdrop click ───────────────────────────────
+['overlay-scanner','overlay-form','overlay-detail'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target.id === id) {
+      if (id === 'overlay-scanner') closeScanner();
+      else if (id === 'overlay-form') closeForm();
+      else closeDetail();
+    }
+  });
+});
+
+// Release camera when page hides (tab switch, app switch on mobile)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopCamera();
+});
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const c  = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = (type==='success' ? '✓ ' : '✕ ') + msg;
+  c.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity   = '0';
+    el.style.transform = 'translateX(110%)';
+    el.style.transition = '.3s';
+    setTimeout(() => el.remove(), 300);
+  }, 3200);
+}
+
+// ── Enter key on manual code ──────────────────────────────
+document.getElementById('manual-code').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmManualCode();
+});
+</script>
+</body>
+</html>

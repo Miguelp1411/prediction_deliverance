@@ -2,70 +2,70 @@
   "occurrence": {
     "type": "trainable",
     "metrics": {
-      "count_exact_acc": 21.9388,
-      "count_mae": 2.6327,
-      "weekly_total_mae": 5.5102,
+      "count_exact_acc": 23.9796,
+      "count_mae": 2.3418,
+      "weekly_total_mae": 4.4694,
       "presence_f1": 99.1941
     },
     "meta": {
-      "best_epoch": 101,
+      "best_epoch": 46,
       "monitor_name": "weekly_total_mae",
-      "monitor_value": 5.5102
+      "monitor_value": 4.4694
     }
   },
   "temporal": {
     "metrics": {
-      "start_exact_acc": 36.633,
-      "start_tol_acc_5m": 36.7633,
-      "start_tol_acc_10m": 37.7401,
-      "start_mae_minutes": 498.5412,
-      "duration_mae_minutes": 0.0263
+      "start_exact_acc": 35.3305,
+      "start_tol_acc_5m": 35.4608,
+      "start_tol_acc_10m": 36.5679,
+      "start_mae_minutes": 528.8668,
+      "duration_mae_minutes": 0.041
     },
     "meta": {
-      "best_epoch": 138,
+      "best_epoch": 95,
       "monitor_name": "e2e_compound_score",
-      "monitor_value": 39.2288
+      "monitor_value": 39.0706
     }
   },
   "ensemble": {
     "metrics": {
-      "task_precision": 91.06,
-      "task_recall": 92.25,
-      "task_f1": 91.65,
-      "time_exact_accuracy": 55.85,
-      "time_close_accuracy_5m": 56.53,
-      "time_close_accuracy_10m": 57.64,
-      "duration_close_accuracy": 92.25,
-      "start_mae_minutes": 213.9587,
-      "overlap_same_device_count": 647.0
+      "task_precision": 92.49,
+      "task_recall": 92.58,
+      "task_f1": 92.53,
+      "time_exact_accuracy": 55.75,
+      "time_close_accuracy_5m": 56.17,
+      "time_close_accuracy_10m": 57.28,
+      "duration_close_accuracy": 92.58,
+      "start_mae_minutes": 208.3275,
+      "overlap_same_device_count": 655.0
     }
   },
   "per_task_final": {
     "Assist": {
-      "total": 460.0,
+      "total": 457.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 53.6957
+      "time_exact_accuracy": 52.0788
     },
     "Clean": {
-      "total": 823.0,
+      "total": 833.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 62.5759
+      "time_exact_accuracy": 60.9844
     },
     "Delivery": {
-      "total": 572.0,
+      "total": 573.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 61.5385
+      "time_exact_accuracy": 63.6998
     },
     "Patroll": {
-      "total": 978.0,
+      "total": 980.0,
       "task_accuracy": 100.0,
-      "time_exact_accuracy": 61.4519
+      "time_exact_accuracy": 61.3265
     }
   },
   "meta": {
-    "best_epoch_temporal": 138,
+    "best_epoch_temporal": 95,
     "monitor_name": "e2e_compound_score",
-    "monitor_value": 39.2288,
+    "monitor_value": 39.0706,
     "prediction_use_repair": false,
     "occurrence_model_kind": "task_gru"
   },
