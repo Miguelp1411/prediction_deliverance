@@ -1,0 +1,83 @@
+{
+  "occurrence": {
+    "type": "trainable",
+    "metrics": {
+      "count_exact_acc": 28.5714,
+      "count_mae": 1.8112,
+      "weekly_total_mae": 4.5102
+    },
+    "aux_metrics": {
+      "presence_precision": 98.4255,
+      "presence_recall": 100.0,
+      "presence_f1": 99.2057,
+      "occurrence_selection_score": 15.9375
+    },
+    "meta": {
+      "best_epoch": 97,
+      "monitor_name": "count_exact_acc",
+      "monitor_value": 28.5714,
+      "occurrence_train_val_gap_count_exact_acc": 34.8214
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 69.9446,
+      "start_tol_acc_5m": 70.8238,
+      "start_tol_acc_10m": 73.8196,
+      "start_mae_minutes": 49.3015,
+      "duration_mae_minutes": 0.1758,
+      "day_exact_acc": 97.8834,
+      "time_of_day_exact_acc": 70.0098
+    },
+    "meta": {
+      "best_epoch": 22,
+      "monitor_name": "e2e_compound_score",
+      "monitor_value": 22.2037
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 94.41,
+      "task_recall": 94.01,
+      "task_f1": 94.21,
+      "time_exact_accuracy": 39.34,
+      "time_close_accuracy_5m": 40.48,
+      "time_close_accuracy_10m": 42.79,
+      "duration_close_accuracy": 94.01,
+      "start_mae_minutes": 365.4347,
+      "overlap_same_device_count": 0.0,
+      "overlap_global_count": 0.0,
+      "unknown_device_count": 3058.0
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 465.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 34.6237
+    },
+    "Clean": {
+      "total": 851.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 40.658
+    },
+    "Delivery": {
+      "total": 574.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 33.9721
+    },
+    "Patroll": {
+      "total": 997.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 50.7523
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 22,
+    "monitor_name": "e2e_compound_score",
+    "monitor_value": 22.2037,
+    "prediction_use_repair": true,
+    "occurrence_model_kind": "task_gru"
+  },
+  "report_path": "/home/miguel/Descargas/ppppppppp/project_06_v4.3/reports/training_report.json"
+}

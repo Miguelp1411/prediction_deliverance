@@ -1,0 +1,141 @@
+{
+  "occurrence": {
+    "type": "trainable",
+    "metrics": {
+      "count_exact_acc": 23.9796,
+      "count_mae": 1.8827,
+      "weekly_total_mae": 5.5306
+    },
+    "aux_metrics": {
+      "presence_precision": 97.9102,
+      "presence_recall": 100.0,
+      "presence_f1": 98.941,
+      "occurrence_selection_score": 8.7411
+    },
+    "meta": {
+      "best_epoch": 49,
+      "monitor_name": "count_mae",
+      "monitor_value": 1.8827,
+      "occurrence_train_val_gap_count_exact_acc": 11.7347
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 71.6379,
+      "start_tol_acc_5m": 72.4845,
+      "start_tol_acc_10m": 75.2198,
+      "start_mae_minutes": 47.3315,
+      "duration_mae_minutes": 0.0936,
+      "day_exact_acc": 98.0137,
+      "time_of_day_exact_acc": 71.8333
+    },
+    "meta": {
+      "best_epoch": 34,
+      "monitor_name": "e2e_compound_score",
+      "monitor_value": 23.136
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 95.18,
+      "task_recall": 92.67,
+      "task_f1": 93.91,
+      "time_exact_accuracy": 40.18,
+      "time_close_accuracy_5m": 41.13,
+      "time_close_accuracy_10m": 43.44,
+      "duration_close_accuracy": 92.67,
+      "start_mae_minutes": 359.8138,
+      "overlap_same_device_count": 0.0,
+      "overlap_global_count": 7.0,
+      "unknown_device_count": 2990.0
+    }
+  },
+  "ensemble_ablation": {
+    "stage_order": [
+      "raw",
+      "anchors",
+      "rerank"
+    ],
+    "stages": {
+      "raw": {
+        "task_precision": 95.18,
+        "task_recall": 92.67,
+        "task_f1": 93.91,
+        "time_exact_accuracy": 48.16,
+        "time_close_accuracy_5m": 48.84,
+        "time_close_accuracy_10m": 50.83,
+        "start_mae_minutes": 263.0499,
+        "matching_reassignment_rate": 68.57,
+        "matching_cost_gain_sum": 1288638.9449
+      },
+      "anchors": {
+        "task_precision": 95.18,
+        "task_recall": 92.67,
+        "task_f1": 93.91,
+        "time_exact_accuracy": 42.27,
+        "time_close_accuracy_5m": 43.24,
+        "time_close_accuracy_10m": 45.98,
+        "start_mae_minutes": 271.4617,
+        "matching_reassignment_rate": 68.29,
+        "matching_cost_gain_sum": 1271223.9739
+      },
+      "rerank": {
+        "task_precision": 95.18,
+        "task_recall": 92.67,
+        "task_f1": 93.91,
+        "time_exact_accuracy": 40.18,
+        "time_close_accuracy_5m": 41.13,
+        "time_close_accuracy_10m": 43.44,
+        "start_mae_minutes": 359.8138,
+        "matching_reassignment_rate": 68.18,
+        "matching_cost_gain_sum": 1249482.8197
+      }
+    },
+    "transitions": {
+      "raw_to_anchors": {
+        "compared_predictions": 2990.0,
+        "events_moved": 720.0,
+        "events_moved_rate": 24.0803,
+        "movement_mean_minutes": 30.4348,
+        "movement_mean_moved_minutes": 126.3889
+      },
+      "anchors_to_rerank": {
+        "compared_predictions": 2990.0,
+        "events_moved": 1042.0,
+        "events_moved_rate": 34.8495,
+        "movement_mean_minutes": 211.413,
+        "movement_mean_moved_minutes": 606.6459
+      }
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 463.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 33.2613
+    },
+    "Clean": {
+      "total": 837.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 40.9797
+    },
+    "Delivery": {
+      "total": 560.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 40.0
+    },
+    "Patroll": {
+      "total": 986.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 52.0284
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 34,
+    "monitor_name": "e2e_compound_score",
+    "monitor_value": 23.136,
+    "prediction_use_repair": false,
+    "occurrence_model_kind": "task_gru"
+  },
+  "report_path": "/home/miguel/Descargas/ppppppppp/project_04_v4.4/reports/training_report.json"
+}

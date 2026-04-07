@@ -1,0 +1,78 @@
+{
+  "occurrence": {
+    "type": "trainable",
+    "metrics": {
+      "count_exact_acc": 29.0816,
+      "count_mae": 1.5561,
+      "weekly_total_mae": 3.4082,
+      "presence_f1": 99.4676,
+      "occurrence_selection_score": 19.3941
+    },
+    "meta": {
+      "best_epoch": 79,
+      "monitor_name": "occurrence_selection_score",
+      "monitor_value": 19.3941
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 70.3028,
+      "start_tol_acc_5m": 71.6053,
+      "start_tol_acc_10m": 74.6662,
+      "start_mae_minutes": 50.4054,
+      "duration_mae_minutes": 0.1535,
+      "day_exact_acc": 97.688,
+      "time_of_day_exact_acc": 70.4982
+    },
+    "meta": {
+      "best_epoch": 22,
+      "monitor_name": "e2e_compound_score",
+      "monitor_value": 21.4745
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 95.67,
+      "task_recall": 94.33,
+      "task_f1": 95.0,
+      "time_exact_accuracy": 38.52,
+      "time_close_accuracy_5m": 39.6,
+      "time_close_accuracy_10m": 41.94,
+      "duration_close_accuracy": 94.33,
+      "start_mae_minutes": 362.4336,
+      "overlap_same_device_count": 0.0,
+      "overlap_global_count": 0.0,
+      "unknown_device_count": 3028.0
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 470.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 36.5957
+    },
+    "Clean": {
+      "total": 836.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 37.201
+    },
+    "Delivery": {
+      "total": 581.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 37.0052
+    },
+    "Patroll": {
+      "total": 1010.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 48.0198
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 22,
+    "monitor_name": "e2e_compound_score",
+    "monitor_value": 21.4745,
+    "prediction_use_repair": true,
+    "occurrence_model_kind": "task_gru"
+  },
+  "report_path": "/home/miguel/Descargas/ppppppppp/project_06_v4.2/reports/training_report.json"
+}

@@ -1,0 +1,75 @@
+{
+  "occurrence": {
+    "type": "trainable",
+    "metrics": {
+      "count_exact_acc": 16.8367,
+      "count_mae": 2.0357,
+      "weekly_total_mae": 3.8163,
+      "presence_f1": 99.197
+    },
+    "meta": {
+      "best_epoch": 21,
+      "monitor_name": "weekly_total_mae",
+      "monitor_value": 3.8163
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 42.9827,
+      "start_tol_acc_5m": 52.9795,
+      "start_tol_acc_10m": 60.013,
+      "start_mae_minutes": 68.2888,
+      "duration_mae_minutes": 0.3709
+    },
+    "meta": {
+      "best_epoch": 78,
+      "monitor_name": "e2e_compound_score",
+      "monitor_value": 21.7352
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 94.47,
+      "task_recall": 92.38,
+      "task_f1": 93.41,
+      "time_exact_accuracy": 27.52,
+      "time_close_accuracy_5m": 34.74,
+      "time_close_accuracy_10m": 38.98,
+      "duration_close_accuracy": 91.99,
+      "start_mae_minutes": 260.1833,
+      "overlap_same_device_count": 0.0,
+      "overlap_global_count": 1049.0,
+      "unknown_device_count": 3003.0
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 435.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 14.9425
+    },
+    "Clean": {
+      "total": 841.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 24.7325
+    },
+    "Delivery": {
+      "total": 554.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 23.8267
+    },
+    "Patroll": {
+      "total": 1007.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 43.6941
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 78,
+    "monitor_name": "e2e_compound_score",
+    "monitor_value": 21.7352,
+    "prediction_use_repair": false,
+    "occurrence_model_kind": "task_gru"
+  },
+  "report_path": "/home/miguel/Descargas/ppppppppp/proj06/reports/training_report.json"
+}

@@ -1,0 +1,144 @@
+{
+  "occurrence": {
+    "type": "trainable",
+    "metrics": {
+      "count_exact_acc": 38.9706,
+      "close_acc_1": 72.0588,
+      "close_acc_2": 85.7843,
+      "count_mae": 1.1373,
+      "weekly_total_mae": 2.7255
+    },
+    "aux_metrics": {
+      "presence_precision": 100.0,
+      "presence_recall": 99.494,
+      "presence_f1": 99.7442,
+      "occurrence_selection_score": 31.3039,
+      "occurrence_realistic_score": 62.402
+    },
+    "meta": {
+      "best_epoch": 174,
+      "monitor_name": "occurrence_realistic_score",
+      "monitor_value": 62.402,
+      "occurrence_train_val_gap_count_exact_acc": 34.4205
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 82.0232,
+      "start_tol_acc_5m": 82.6026,
+      "start_tol_acc_10m": 84.2468,
+      "start_mae_minutes": 35.6005,
+      "duration_mae_minutes": 0.0656,
+      "day_exact_acc": 98.6533,
+      "time_of_day_exact_acc": 82.2737
+    },
+    "meta": {
+      "best_epoch": 37,
+      "monitor_name": "e2e_compound_score",
+      "monitor_value": 19.6097
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 96.43,
+      "task_recall": 96.3,
+      "task_f1": 96.36,
+      "time_exact_accuracy": 39.92,
+      "time_close_accuracy_5m": 40.6,
+      "time_close_accuracy_10m": 42.25,
+      "duration_close_accuracy": 96.3,
+      "start_mae_minutes": 419.8951,
+      "overlap_same_device_count": 0.0,
+      "overlap_global_count": 19.0,
+      "unknown_device_count": 6378.0
+    }
+  },
+  "ensemble_ablation": {
+    "stage_order": [
+      "raw",
+      "anchors",
+      "rerank"
+    ],
+    "stages": {
+      "raw": {
+        "task_precision": 96.43,
+        "task_recall": 96.3,
+        "task_f1": 96.36,
+        "time_exact_accuracy": 51.13,
+        "time_close_accuracy_5m": 51.49,
+        "time_close_accuracy_10m": 52.96,
+        "start_mae_minutes": 320.6602,
+        "matching_reassignment_rate": 59.39,
+        "matching_cost_gain_sum": 1395756.8355
+      },
+      "anchors": {
+        "task_precision": 96.43,
+        "task_recall": 96.3,
+        "task_f1": 96.36,
+        "time_exact_accuracy": 46.26,
+        "time_close_accuracy_5m": 46.92,
+        "time_close_accuracy_10m": 48.48,
+        "start_mae_minutes": 333.6439,
+        "matching_reassignment_rate": 59.11,
+        "matching_cost_gain_sum": 1370011.1633
+      },
+      "rerank": {
+        "task_precision": 96.43,
+        "task_recall": 96.3,
+        "task_f1": 96.36,
+        "time_exact_accuracy": 39.92,
+        "time_close_accuracy_5m": 40.6,
+        "time_close_accuracy_10m": 42.25,
+        "start_mae_minutes": 419.8951,
+        "matching_reassignment_rate": 56.42,
+        "matching_cost_gain_sum": 1273075.519
+      }
+    },
+    "transitions": {
+      "raw_to_anchors": {
+        "compared_predictions": 6378.0,
+        "events_moved": 1287.0,
+        "events_moved_rate": 20.1787,
+        "movement_mean_minutes": 46.2065,
+        "movement_mean_moved_minutes": 228.986
+      },
+      "anchors_to_rerank": {
+        "compared_predictions": 6378.0,
+        "events_moved": 2260.0,
+        "events_moved_rate": 35.4343,
+        "movement_mean_minutes": 262.3377,
+        "movement_mean_moved_minutes": 740.3496
+      }
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 979.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 37.1808
+    },
+    "Clean": {
+      "total": 1843.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 36.9506
+    },
+    "Delivery": {
+      "total": 1218.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 36.289
+    },
+    "Patroll": {
+      "total": 2110.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 50.3318
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 37,
+    "monitor_name": "e2e_compound_score",
+    "monitor_value": 19.6097,
+    "prediction_use_repair": false,
+    "occurrence_model_kind": "task_gru"
+  },
+  "report_path": "/home/miguel/Descargas/ppppppppp/content/project_06_v4.5/reports/training_report.json"
+}
