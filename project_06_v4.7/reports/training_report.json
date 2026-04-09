@@ -1,0 +1,191 @@
+{
+  "occurrence": {
+    "type": "trainable",
+    "metrics": {
+      "count_exact_acc": 33.0882,
+      "close_acc_1": 66.9118,
+      "close_acc_2": 84.3137,
+      "count_mae": 1.2819,
+      "weekly_total_mae": 2.951
+    },
+    "aux_metrics": {
+      "presence_precision": 99.7442,
+      "presence_recall": 99.2382,
+      "presence_f1": 99.4871,
+      "occurrence_selection_score": 24.7494,
+      "occurrence_realistic_score": 57.5429
+    },
+    "meta": {
+      "best_epoch": 56,
+      "monitor_name": "occurrence_realistic_score",
+      "monitor_value": 57.5429,
+      "occurrence_train_val_gap_count_exact_acc": 15.4885
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 82.9158,
+      "start_tol_acc_5m": 83.4795,
+      "start_tol_acc_10m": 84.8732,
+      "start_bucket_0_5m_only": 0.5637,
+      "start_bucket_5_10m_only": 1.3937,
+      "start_mae_minutes": 32.2134,
+      "duration_mae_minutes": 0.0546,
+      "day_exact_acc": 98.7786,
+      "time_of_day_exact_acc": 83.0723
+    },
+    "meta": {
+      "best_epoch": 48,
+      "monitor_name": "e2e_compound_score",
+      "monitor_value": 34.1385
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 96.1,
+      "task_recall": 95.68,
+      "task_f1": 95.89,
+      "time_exact_accuracy": 48.84,
+      "time_close_accuracy_5m": 49.51,
+      "time_close_accuracy_10m": 51.08,
+      "time_bucket_0_5m_only": 0.67,
+      "time_bucket_5_10m_only": 1.57,
+      "duration_close_accuracy": 95.68,
+      "start_mae_minutes": 307.5221,
+      "overlap_same_device_count": 1010.0,
+      "overlap_global_count": 1010.0,
+      "unknown_device_count": 0.0
+    }
+  },
+  "ensemble_ablation": {
+    "stage_order": [
+      "raw",
+      "anchors",
+      "rerank",
+      "gated"
+    ],
+    "stages": {
+      "raw": {
+        "task_precision": 96.1,
+        "task_recall": 95.68,
+        "task_f1": 95.89,
+        "time_exact_accuracy": 53.21,
+        "time_close_accuracy_5m": 53.57,
+        "time_close_accuracy_10m": 54.87,
+        "start_mae_minutes": 307.9697,
+        "matching_reassignment_rate": 60.75,
+        "matching_cost_gain_sum": 1600201.383
+      },
+      "anchors": {
+        "task_precision": 96.1,
+        "task_recall": 95.68,
+        "task_f1": 95.89,
+        "time_exact_accuracy": 50.13,
+        "time_close_accuracy_5m": 50.58,
+        "time_close_accuracy_10m": 52.08,
+        "start_mae_minutes": 310.1948,
+        "matching_reassignment_rate": 60.3,
+        "matching_cost_gain_sum": 1595921.0624
+      },
+      "rerank": {
+        "task_precision": 96.1,
+        "task_recall": 95.68,
+        "task_f1": 95.89,
+        "time_exact_accuracy": 48.42,
+        "time_close_accuracy_5m": 49.08,
+        "time_close_accuracy_10m": 50.67,
+        "start_mae_minutes": 307.6948,
+        "matching_reassignment_rate": 59.26,
+        "matching_cost_gain_sum": 1593835.943
+      },
+      "gated": {
+        "task_precision": 96.1,
+        "task_recall": 95.68,
+        "task_f1": 95.89,
+        "time_exact_accuracy": 48.84,
+        "time_close_accuracy_5m": 49.51,
+        "time_close_accuracy_10m": 51.08,
+        "start_mae_minutes": 307.5221,
+        "matching_reassignment_rate": 59.34,
+        "matching_cost_gain_sum": 1593690.9316
+      }
+    },
+    "transitions": {
+      "raw_to_anchors": {
+        "compared_predictions": 6358.0,
+        "events_moved": 791.0,
+        "events_moved_rate": 12.441,
+        "movement_mean_minutes": 6.5744,
+        "movement_mean_moved_minutes": 52.8445
+      },
+      "anchors_to_rerank": {
+        "compared_predictions": 6358.0,
+        "events_moved": 1528.0,
+        "events_moved_rate": 24.0327,
+        "movement_mean_minutes": 21.6271,
+        "movement_mean_moved_minutes": 89.9902
+      },
+      "rerank_to_gated": {
+        "compared_predictions": 6358.0,
+        "events_moved": 93.0,
+        "events_moved_rate": 1.4627,
+        "movement_mean_minutes": 0.7274,
+        "movement_mean_moved_minutes": 49.7312
+      }
+    },
+    "selection": {
+      "selected_stage": "gated",
+      "selected_stage_score": -700.1375,
+      "stage_scores": {
+        "raw": -1138.1202,
+        "anchors": -1227.3866,
+        "rerank": -704.5314,
+        "gated": -700.1375
+      }
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 972.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 45.8848
+    },
+    "Clean": {
+      "total": 1814.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 48.5667
+    },
+    "Delivery": {
+      "total": 1202.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 45.4243
+    },
+    "Patroll": {
+      "total": 2122.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 58.7182
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 48,
+    "monitor_name": "e2e_compound_score",
+    "monitor_value": 34.1385,
+    "prediction_use_repair": false,
+    "occurrence_model_kind": "task_gru",
+    "temporal_final_stage": "gated",
+    "temporal_e2e_stage": "gated",
+    "temporal_gating_enable": true,
+    "temporal_rerank_only_on_conflict": true,
+    "validation_stage_selection": {
+      "selected_stage": "gated",
+      "selected_stage_score": -700.1375,
+      "stage_scores": {
+        "raw": -1138.1202,
+        "anchors": -1227.3866,
+        "rerank": -704.5314,
+        "gated": -700.1375
+      }
+    }
+  },
+  "report_path": "/home/miguel/Descargas/project_06_v4.7/reports/training_report.json"
+}
