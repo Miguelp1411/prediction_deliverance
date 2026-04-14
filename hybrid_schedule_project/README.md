@@ -1,0 +1,116 @@
+# Hybrid Weekly Scheduler Forecasting
+
+Proyecto rehacer desde cero el forecasting semanal de agendas operativas con estas ideas centrales:
+
+- **memoria histórica primero**: la predicción base sale de semanas plantilla recuperadas del histórico;
+- **redes neuronales residuales**: las redes no reinventan la agenda, corrigen desviaciones sobre la plantilla;
+- **optimización global exacta**: la semana final se construye con un solver MILP, no con heurísticas locales;
+- **multi-base de datos**: el núcleo trabaja sobre un esquema canónico y un `database_id` explícito.
+
+## Qué resuelve
+
+Dado el histórico de una o varias bases de datos con eventos tipo agenda:
+
+- predice el número de ocurrencias por tipo de tarea para la semana objetivo,
+- propone ajustes residuales de tiempo y duración para cada slot plantilla,
+- genera una agenda semanal final sin solapes por robot/dispositivo,
+- produce reporting detallado durante entrenamiento y un informe final reproducible.
+
+## Arquitectura
+
+```text
+1) adapters + normalización canónica
+2) profiling por base / robot
+3) retrieval de semanas análogas
+4) red residual de occurrence
+5) red residual temporal (top-k candidatos)
+6) scheduler MILP exacto
+7) backtesting + reporting
+```
+
+## Esquema canónico interno
+
+Cada evento se convierte a este formato lógico:
+
+```json
+{
+  "database_id": "hospital_a",
+  "robot_id": "robot_01",
+  "task_type": "Clean",
+  "start_time": "2026-01-05T08:00:00+00:00",
+  "end_time": "2026-01-05T08:45:00+00:00",
+  "timezone": "Europe/Madrid",
+  "source_event_id": "evt_123"
+}
+```
+
+## Estructura
+
+- `configs/default.yaml`: configuración principal
+- `examples/registry.yaml`: ejemplo de registro multi-base
+- `scripts/profile_dataset.py`: perfilado y validación de fuentes
+- `scripts/train.py`: entrenamiento completo + reporting
+- `scripts/predict_week.py`: inferencia de una semana futura
+- `src/hybrid_schedule/data`: adapters, normalización, features y datasets
+- `src/hybrid_schedule/retrieval`: recuperación de plantillas históricas
+- `src/hybrid_schedule/models`: modelos neuronales residuales
+- `src/hybrid_schedule/scheduler`: scheduler MILP exacto con fallback
+- `src/hybrid_schedule/evaluation`: matching y métricas semanales
+- `src/hybrid_schedule/reporting`: logs, plots y reporte final
+
+## Entrenamiento
+
+```bash
+python scripts/train.py \
+  --registry examples/registry.yaml \
+  --config configs/default.yaml \
+  --output-dir reports/run_01
+```
+
+### Qué guarda durante el entrenamiento
+
+- `epoch_metrics.jsonl`: una línea JSON por epoch
+- `epoch_metrics.csv`: métricas tabulares
+- `occurrence_history.png`
+- `temporal_history.png`
+- `backtest_weekly_metrics.csv`
+- `summary.json`
+- `final_report.md`
+
+## Inferencia
+
+```bash
+python scripts/predict_week.py \
+  --registry examples/registry.yaml \
+  --config configs/default.yaml \
+  --output-dir reports/predict_01 \
+  --database-id nexus_10y
+```
+
+Se genera:
+
+- `predicted_week.json`
+- `prediction_explanation.json`
+
+## Modos de fuente soportados
+
+- `json`
+- `sqlite`
+- `api` (esqueleto para integrar después)
+
+## Diseño recomendado
+
+Este proyecto está pensado para el caso descrito en tu análisis:
+
+- fuerte estacionalidad anual,
+- agendas repetitivas con variaciones locales,
+- duraciones discretizadas,
+- restricciones duras de no-overlap,
+- varias bases de datos con diferente perfil operativo.
+
+Por eso la salida final **no** depende solo de una red. La red aporta señales residuales, pero la coherencia semanal la garantiza el solver.
+
+
+## Actualización temporal jerárquica
+
+La versión actual del modelo temporal ya no usa un único head plano de tiempo. Ahora separa la predicción en tres niveles: `day_head` (día de la semana), `macroblock_head` (bloque horario configurable, por defecto 60 minutos) y `fine_offset_head` (offset fino dentro del bloque). Esto reduce errores gruesos y mejora la calidad de candidatos para el scheduler.
