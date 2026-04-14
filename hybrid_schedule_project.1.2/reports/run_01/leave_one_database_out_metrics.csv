@@ -1,0 +1,2 @@
+database_id,task_precision,task_recall,task_f1,time_exact_accuracy,time_close_accuracy_5m,time_close_accuracy_10m,duration_close_accuracy,start_mae_minutes,overlap_same_robot_count,predicted_tasks,true_tasks,matched_tasks,num_alternative_schedules
+nexus_10y,90.4974479717046,91.10712895396925,90.35282524967958,45.904052455619414,47.23396278833146,48.70615689968472,100.0,257.12673116902675,1.125,61.25,62.333333333333336,56.0,2.0

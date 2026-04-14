@@ -1,0 +1,19 @@
+# Global training — inherits from base.yaml
+_base_: base.yaml
+
+data:
+  databases:
+    - path: bases_datos/nexus_schedule_10years.json
+      id: nexus_10y
+    - path: bases_datos/robot_schedule_gamma.json
+      id: robot_gamma
+    - path: bases_datos/robot_schedule_5years.json
+      id: robot_5y
+
+occurrence_model:
+  max_epochs: 120
+  patience: 30
+
+temporal_model:
+  max_epochs: 180
+  patience: 24

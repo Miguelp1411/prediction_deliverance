@@ -1,0 +1,9 @@
+# Inference — inherits from base.yaml
+_base_: base.yaml
+
+retrieval:
+  strategy: topk_blend
+  top_k: 5
+
+scheduler:
+  solver_time_limit_seconds: 15

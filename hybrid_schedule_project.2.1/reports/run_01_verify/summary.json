@@ -1,0 +1,73 @@
+{
+  "profile": {
+    "num_events": 32732,
+    "num_databases": 1,
+    "num_robots": 1,
+    "num_tasks": 4,
+    "tasks": [
+      "Assist",
+      "Clean",
+      "Delivery",
+      "Patroll"
+    ],
+    "date_min": "2026-01-05 09:00:00+01:00",
+    "date_max": "2036-01-05 00:25:00+01:00",
+    "num_weeks": 522,
+    "duration_minutes_min": 10.0,
+    "duration_minutes_median": 25.0,
+    "duration_minutes_max": 45.0,
+    "weekly_tasks_mean": 62.70498084291188,
+    "weekly_tasks_std": 16.668529028694717,
+    "overlap_same_robot_count": 0,
+    "overlap_breakdown": {
+      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 0
+    },
+    "by_database": {
+      "nexus_10y": {
+        "events": 32732,
+        "robots": 1,
+        "weeks": 522,
+        "tasks": [
+          "Assist",
+          "Clean",
+          "Delivery",
+          "Patroll"
+        ],
+        "weekly_mean": 62.70498084291188,
+        "duration_median": 25.0
+      }
+    }
+  },
+  "occurrence": {
+    "change_acc": 77.08333333333333,
+    "close_acc_1": 43.75,
+    "close_acc_2": 58.333333333333336,
+    "count_exact_acc": 12.5,
+    "count_mae": 2.2083333333333335
+  },
+  "temporal": {
+    "duration_mae_minutes": 0.09630017206072808,
+    "start_exact_acc": 0.25,
+    "start_mae_minutes": 987.9395874023437,
+    "start_tol_10m": 0.25,
+    "start_tol_5m": 0.25
+  },
+  "backtest": {
+    "task_precision": 82.94311400449507,
+    "task_recall": 87.55302601809954,
+    "task_f1": 84.56420863981377,
+    "time_exact_accuracy": 22.06478518902853,
+    "time_close_accuracy_5m": 23.46168104718347,
+    "time_close_accuracy_10m": 27.86816645207989,
+    "duration_close_accuracy": 100.0,
+    "start_mae_minutes": 284.5219351423479,
+    "overlap_same_robot_count": 0.0,
+    "predicted_tasks": 68.25,
+    "true_tasks": 65.25,
+    "matched_tasks": 56.5
+  },
+  "artifacts": {
+    "occurrence_checkpoint": "/home/miguel/Descargas/hybrid_schedule_project.2.1/reports/run_01_verify/occurrence_model.pt",
+    "temporal_checkpoint": "/home/miguel/Descargas/hybrid_schedule_project.2.1/reports/run_01_verify/temporal_model.pt"
+  }
+}

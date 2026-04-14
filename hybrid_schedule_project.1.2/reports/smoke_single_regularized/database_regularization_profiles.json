@@ -1,0 +1,32 @@
+{
+  "nexus_10y": {
+    "database_id": "nexus_10y",
+    "events": 32732,
+    "weeks": 522,
+    "robots": 1,
+    "sample_share": 1.0,
+    "weekly_cv": 0.2658246411150752,
+    "task_count_cv_mean": 0.5285986408093957,
+    "day_entropy_mean": 1.7879029277001717,
+    "time_entropy_mean": 3.8001089272045796,
+    "duration_modal_share_mean": 1.0,
+    "scarcity_score": 0.0,
+    "volatility_score": 0.0,
+    "rigidity_score": 1.0,
+    "history_dropout": 0.02,
+    "history_noise_std": 0.002,
+    "feature_dropout": 0.02,
+    "feature_noise_std": 0.001,
+    "occurrence_label_smoothing": 0.01,
+    "occurrence_delta_target_sigma": 0.75,
+    "occurrence_count_shrink_weight": 0.06,
+    "occurrence_confidence_penalty": 0.0005,
+    "temporal_day_label_smoothing": 0.01,
+    "temporal_time_target_sigma": 1.0,
+    "temporal_anchor_weight": 0.13999999999999999,
+    "temporal_day_prior_weight": 0.148,
+    "temporal_time_prior_weight": 0.16999999999999998,
+    "temporal_confidence_penalty": 0.0005,
+    "temporal_time_smoothness_weight": 0.0004
+  }
+}

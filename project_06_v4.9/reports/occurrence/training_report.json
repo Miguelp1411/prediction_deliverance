@@ -1,0 +1,49 @@
+{
+  "model_name": "OccurrenceResidual",
+  "total_epochs": 2,
+  "best_epoch": 2,
+  "total_training_time_seconds": 3.2877702713012695,
+  "best_metrics": {
+    "best_val_loss": 1.7191635370254517
+  },
+  "baseline_comparison": {
+    "retrieval_topk": {
+      "task_precision": 100.0,
+      "task_recall": 99.43181818181819,
+      "task_f1": 99.71264367816093,
+      "time_exact_accuracy": 96.51162790697674,
+      "time_close_accuracy_5m": 96.51162790697674,
+      "time_close_accuracy_10m": 96.51162790697674,
+      "start_mae_minutes": 3.8372093023255816,
+      "duration_mae_minutes": 0.0,
+      "overlap_same_device_count": 66.25,
+      "overlap_global_count": 66.25,
+      "matched_pairs": 45.0,
+      "total_true": 45.25,
+      "total_pred": 45.0
+    }
+  },
+  "ablation_results": {},
+  "per_database_results": {},
+  "per_task_results": {},
+  "epoch_history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.9299736022949219,
+      "val_loss": 1.829997181892395,
+      "monitor_value": 1.829997181892395,
+      "improved": true,
+      "lr": 0.0005,
+      "elapsed_seconds": 0.9137375354766846
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.8204526901245117,
+      "val_loss": 1.7191635370254517,
+      "monitor_value": 1.7191635370254517,
+      "improved": true,
+      "lr": 0.0005,
+      "elapsed_seconds": 0.30388665199279785
+    }
+  ]
+}

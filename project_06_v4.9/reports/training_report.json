@@ -1,0 +1,191 @@
+{
+  "occurrence": {
+    "type": "trainable",
+    "metrics": {
+      "count_exact_acc": 24.5098,
+      "close_acc_1": 54.6569,
+      "close_acc_2": 75.7353,
+      "count_mae": 1.5956,
+      "weekly_total_mae": 2.9314
+    },
+    "aux_metrics": {
+      "presence_precision": 99.749,
+      "presence_recall": 99.7407,
+      "presence_f1": 99.7438,
+      "occurrence_selection_score": 15.9847,
+      "occurrence_realistic_score": 46.6949
+    },
+    "meta": {
+      "best_epoch": 3,
+      "monitor_name": "occurrence_realistic_score",
+      "monitor_value": 46.6949,
+      "occurrence_train_val_gap_count_exact_acc": -5.6979
+    }
+  },
+  "temporal": {
+    "metrics": {
+      "start_exact_acc": 81.71,
+      "start_tol_acc_5m": 82.3364,
+      "start_tol_acc_10m": 83.9179,
+      "start_bucket_0_5m_only": 0.6264,
+      "start_bucket_5_10m_only": 1.5816,
+      "start_mae_minutes": 34.7338,
+      "duration_mae_minutes": 0.0735,
+      "day_exact_acc": 98.6846,
+      "time_of_day_exact_acc": 81.8822
+    },
+    "meta": {
+      "best_epoch": 30,
+      "monitor_name": "e2e_compound_score",
+      "monitor_value": 35.5085
+    }
+  },
+  "ensemble": {
+    "metrics": {
+      "task_precision": 94.92,
+      "task_recall": 94.88,
+      "task_f1": 94.9,
+      "time_exact_accuracy": 48.72,
+      "time_close_accuracy_5m": 49.42,
+      "time_close_accuracy_10m": 50.83,
+      "time_bucket_0_5m_only": 0.7,
+      "time_bucket_5_10m_only": 1.41,
+      "duration_close_accuracy": 94.88,
+      "start_mae_minutes": 278.2431,
+      "overlap_same_device_count": 1018.0,
+      "overlap_global_count": 1018.0,
+      "unknown_device_count": 0.0
+    }
+  },
+  "ensemble_ablation": {
+    "stage_order": [
+      "raw",
+      "anchors",
+      "rerank",
+      "gated"
+    ],
+    "stages": {
+      "raw": {
+        "task_precision": 94.92,
+        "task_recall": 94.88,
+        "task_f1": 94.9,
+        "time_exact_accuracy": 53.15,
+        "time_close_accuracy_5m": 53.46,
+        "time_close_accuracy_10m": 54.9,
+        "start_mae_minutes": 279.1921,
+        "matching_reassignment_rate": 69.53,
+        "matching_cost_gain_sum": 2727439.8276
+      },
+      "anchors": {
+        "task_precision": 94.92,
+        "task_recall": 94.88,
+        "task_f1": 94.9,
+        "time_exact_accuracy": 49.34,
+        "time_close_accuracy_5m": 49.91,
+        "time_close_accuracy_10m": 51.52,
+        "start_mae_minutes": 281.5638,
+        "matching_reassignment_rate": 69.41,
+        "matching_cost_gain_sum": 2728410.0254
+      },
+      "rerank": {
+        "task_precision": 94.92,
+        "task_recall": 94.88,
+        "task_f1": 94.9,
+        "time_exact_accuracy": 48.48,
+        "time_close_accuracy_5m": 49.2,
+        "time_close_accuracy_10m": 50.61,
+        "start_mae_minutes": 278.4164,
+        "matching_reassignment_rate": 68.41,
+        "matching_cost_gain_sum": 2724458.5777
+      },
+      "gated": {
+        "task_precision": 94.92,
+        "task_recall": 94.88,
+        "task_f1": 94.9,
+        "time_exact_accuracy": 48.72,
+        "time_close_accuracy_5m": 49.42,
+        "time_close_accuracy_10m": 50.83,
+        "start_mae_minutes": 278.2431,
+        "matching_reassignment_rate": 68.48,
+        "matching_cost_gain_sum": 2724693.5777
+      }
+    },
+    "transitions": {
+      "raw_to_anchors": {
+        "compared_predictions": 6383.0,
+        "events_moved": 979.0,
+        "events_moved_rate": 15.3376,
+        "movement_mean_minutes": 7.708,
+        "movement_mean_moved_minutes": 50.2554
+      },
+      "anchors_to_rerank": {
+        "compared_predictions": 6383.0,
+        "events_moved": 1569.0,
+        "events_moved_rate": 24.5809,
+        "movement_mean_minutes": 24.4141,
+        "movement_mean_moved_minutes": 99.3212
+      },
+      "rerank_to_gated": {
+        "compared_predictions": 6383.0,
+        "events_moved": 53.0,
+        "events_moved_rate": 0.8303,
+        "movement_mean_minutes": 0.4864,
+        "movement_mean_moved_minutes": 58.5849
+      }
+    },
+    "selection": {
+      "selected_stage": "gated",
+      "selected_stage_score": -704.8414,
+      "stage_scores": {
+        "raw": -1124.0591,
+        "anchors": -1251.7201,
+        "rerank": -708.1778,
+        "gated": -704.8414
+      }
+    }
+  },
+  "per_task_final": {
+    "Assist": {
+      "total": 951.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 45.7413
+    },
+    "Clean": {
+      "total": 1830.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 47.9781
+    },
+    "Delivery": {
+      "total": 1175.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 49.5319
+    },
+    "Patroll": {
+      "total": 2103.0,
+      "task_accuracy": 100.0,
+      "time_exact_accuracy": 57.8222
+    }
+  },
+  "meta": {
+    "best_epoch_temporal": 30,
+    "monitor_name": "e2e_compound_score",
+    "monitor_value": 35.5085,
+    "prediction_use_repair": false,
+    "occurrence_model_kind": "task_moe_v48",
+    "temporal_final_stage": "gated",
+    "temporal_e2e_stage": "gated",
+    "temporal_gating_enable": true,
+    "temporal_rerank_only_on_conflict": true,
+    "validation_stage_selection": {
+      "selected_stage": "gated",
+      "selected_stage_score": -704.8414,
+      "stage_scores": {
+        "raw": -1124.0591,
+        "anchors": -1251.7201,
+        "rerank": -708.1778,
+        "gated": -704.8414
+      }
+    }
+  },
+  "report_path": "/home/miguel/Descargas/project_06_v4.8/reports/training_report.json"
+}

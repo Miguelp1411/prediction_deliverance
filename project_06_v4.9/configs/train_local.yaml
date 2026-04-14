@@ -1,0 +1,17 @@
+# Local fine-tuning — inherits from base.yaml
+_base_: base.yaml
+
+data:
+  databases:
+    - path: bases_datos/nexus_schedule_10years.json
+      id: nexus_10y
+
+occurrence_model:
+  max_epochs: 40
+  patience: 15
+  lr: 1.0e-4
+
+temporal_model:
+  max_epochs: 60
+  patience: 15
+  lr: 1.0e-4

@@ -1,0 +1,125 @@
+# ============================================================
+# Base configuration — Hybrid Multi-DB Schedule Predictor
+# ============================================================
+
+project:
+  seed: 42
+  timezone: null              # e.g. Europe/Madrid
+  bin_minutes: 5
+
+# ---- Runtime ----
+runtime:
+  device: auto                # auto | cpu | cuda
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 4
+  enable_cudnn_benchmark: true
+  enable_tf32: true
+  use_amp: true
+  amp_dtype: float16          # float16 | bfloat16
+
+# ---- Data ----
+data:
+  databases: []               # list of paths or DB configs
+  train_ratio: 0.80
+  window_weeks: 16
+  anchor_lookback_weeks: 52
+  default_max_occurrences_per_task: 50
+  default_max_tasks_per_week: 100
+  cap_inference_scope: full_dataset
+
+# ---- Profiling ----
+profiling:
+  seasonal_lags: [4, 13, 26, 52]
+  min_weeks_for_lag: 8
+  operating_hours_quantile: 0.02
+
+# ---- Retrieval / Templates ----
+retrieval:
+  strategy: topk_blend        # lag52_copy | best_similar | topk_blend | weighted_blend
+  top_k: 5
+  similarity_features:
+    - count_vector
+    - day_distribution
+    - hour_distribution
+    - week_of_year
+    - month
+  lag_candidates: [52, 26, 4, 1]
+  blend_weights_by_lag:
+    "52": 0.50
+    "26": 0.20
+    "4":  0.20
+    "1":  0.10
+
+# ---- Occurrence Residual Model ----
+occurrence_model:
+  hidden_size: 96
+  num_layers: 1
+  dropout: 0.10
+  task_embed_dim: 16
+  db_embed_dim: 8
+  batch_size: 32
+  lr: 5.0e-4
+  weight_decay: 1.0e-3
+  max_epochs: 120
+  patience: 30
+  scheduler_patience: 10
+  delta_range: 6              # max |delta| predicted
+  change_loss_weight: 0.30
+  delta_loss_weight: 0.70
+  oversampling_factor: 2.0    # oversample difficult weeks
+  candidate_dropout: 0.15     # drop template-dominant candidate
+  monitor_metric: val_delta_mae
+  monitor_mode: min
+
+# ---- Temporal Residual Model ----
+temporal_model:
+  hidden_size: 192
+  num_layers: 3
+  dropout: 0.25
+  task_embed_dim: 44
+  db_embed_dim: 16
+  occ_embed_dim: 16
+  day_embed_dim: 8
+  top_k_slots: 8
+  batch_size: 128
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  max_epochs: 180
+  patience: 24
+  scheduler_patience: 8
+  day_loss_weight: 0.80
+  time_loss_weight: 1.00
+  duration_loss_weight: 0.10
+  day_label_smoothing: 0.02
+  time_label_smoothing: 0.01
+  monitor_metric: val_start_mae
+  monitor_mode: min
+
+# ---- Scheduler (CP-SAT) ----
+scheduler:
+  solver_time_limit_seconds: 30
+  no_overlap: true
+  penalize_template_deviation: 1.0
+  penalize_order_disruption: 0.5
+  prefer_model_score: 2.0
+  min_gap_minutes: 0
+  operating_hours_constraint: true
+
+# ---- Evaluation ----
+evaluation:
+  time_tolerance_minutes: 5
+  secondary_tolerance_minutes: 10
+  duration_tolerance_minutes: 2
+  match_task_mismatch_penalty: 10000.0
+  match_dummy_penalty: 25000.0
+
+# ---- Reporting ----
+reporting:
+  reports_dir: reports
+  checkpoints_dir: checkpoints
+  save_per_epoch_csv: true
+  save_per_epoch_jsonl: true
+  verbose_every: 5
+  e2e_eval_every: 8

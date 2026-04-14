@@ -1,0 +1,33 @@
+{
+  "model_name": "TemporalResidual",
+  "total_epochs": 2,
+  "best_epoch": 2,
+  "total_training_time_seconds": 3.288360595703125,
+  "best_metrics": {
+    "best_val_loss": 3.3735926717684412
+  },
+  "baseline_comparison": {},
+  "ablation_results": {},
+  "per_database_results": {},
+  "per_task_results": {},
+  "epoch_history": [
+    {
+      "epoch": 1,
+      "train_loss": 6.682510947430227,
+      "val_loss": 5.452697651162332,
+      "monitor_value": 5.452697651162332,
+      "improved": true,
+      "lr": 0.0003,
+      "elapsed_seconds": 0.6930482387542725
+    },
+    {
+      "epoch": 2,
+      "train_loss": 4.502814672124668,
+      "val_loss": 3.3735926717684412,
+      "monitor_value": 3.3735926717684412,
+      "improved": true,
+      "lr": 0.0003,
+      "elapsed_seconds": 0.5756058692932129
+    }
+  ]
+}

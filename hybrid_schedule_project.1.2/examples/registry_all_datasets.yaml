@@ -1,0 +1,33 @@
+datasets:
+  - database_id: aux_database
+    source_type: json
+    path: ../bases_datos/aux_database.json
+    timezone: Europe/Madrid
+  - database_id: aux_database_1
+    source_type: json
+    path: ../bases_datos/aux_database_1.json
+    timezone: Europe/Madrid
+  - database_id: aux_database_2
+    source_type: json
+    path: ../bases_datos/aux_database_2.json
+    timezone: Europe/Madrid
+  - database_id: nexus_schedule_10years
+    source_type: json
+    path: ../bases_datos/nexus_schedule_10years.json
+    timezone: Europe/Madrid
+  - database_id: nexus_schedule_5years
+    source_type: json
+    path: ../bases_datos/nexus_schedule_5years.json
+    timezone: Europe/Madrid
+  - database_id: robot_schedule_5years
+    source_type: json
+    path: ../bases_datos/robot_schedule_5years.json
+    timezone: Europe/Madrid
+  - database_id: robot_schedule_gamma
+    source_type: json
+    path: ../bases_datos/robot_schedule_gamma.json
+    timezone: Europe/Madrid
+  - database_id: robot_schedule_v4_2025_2026
+    source_type: json
+    path: ../bases_datos/robot_schedule_v4_2025_2026.json
+    timezone: Europe/Madrid

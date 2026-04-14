@@ -1,0 +1,2 @@
+{"epoch": 1, "train_loss": 1.9299736022949219, "val_loss": 1.829997181892395, "monitor_value": 1.829997181892395, "improved": true, "lr": 0.0005, "elapsed_seconds": 0.9137375354766846}
+{"epoch": 2, "train_loss": 1.8204526901245117, "val_loss": 1.7191635370254517, "monitor_value": 1.7191635370254517, "improved": true, "lr": 0.0005, "elapsed_seconds": 0.30388665199279785}

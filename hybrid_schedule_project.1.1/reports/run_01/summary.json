@@ -1,0 +1,104 @@
+{
+  "profile": {
+    "num_events": 32732,
+    "num_databases": 1,
+    "num_robots": 1,
+    "num_tasks": 4,
+    "tasks": [
+      "Assist",
+      "Clean",
+      "Delivery",
+      "Patroll"
+    ],
+    "date_min": "2026-01-05 09:00:00+01:00",
+    "date_max": "2036-01-05 00:25:00+01:00",
+    "num_weeks": 522,
+    "duration_minutes_min": 10.0,
+    "duration_minutes_median": 25.0,
+    "duration_minutes_max": 45.0,
+    "weekly_tasks_mean": 62.70498084291188,
+    "weekly_tasks_std": 16.668529028694717,
+    "overlap_same_robot_count": 0,
+    "overlap_breakdown": {
+      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 0
+    },
+    "by_database": {
+      "nexus_10y": {
+        "events": 32732,
+        "robots": 1,
+        "weeks": 522,
+        "tasks": [
+          "Assist",
+          "Clean",
+          "Delivery",
+          "Patroll"
+        ],
+        "weekly_mean": 62.70498084291188,
+        "duration_median": 25.0
+      }
+    }
+  },
+  "occurrence": {
+    "change_acc": 87.74038461538461,
+    "close_acc_1": 25.0,
+    "close_acc_2": 40.625,
+    "count_exact_acc": 18.75,
+    "count_mae": 3.34375,
+    "selector_score": -1.5625
+  },
+  "temporal": {
+    "duration_mae_minutes": 0.0,
+    "start_exact_acc": 34.723907766990294,
+    "start_mae_minutes": 224.47692934058608,
+    "start_tol_10m": 37.06007281553398,
+    "start_tol_5m": 35.012135922330096,
+    "task_precision": 91.14498733679096,
+    "task_recall": 91.7261146086171,
+    "task_f1": 91.2464913329176,
+    "time_exact_accuracy": 47.27325609588881,
+    "time_close_accuracy_5m": 48.29609833017294,
+    "time_close_accuracy_10m": 49.98047151517381,
+    "duration_close_accuracy": 100.0,
+    "overlap_same_robot_count": 0.75,
+    "predicted_tasks": 76.75,
+    "true_tasks": 76.875,
+    "matched_tasks": 70.125,
+    "selector_score": 104.2501177764167
+  },
+  "backtest": {
+    "task_precision": 90.46343115532882,
+    "task_recall": 91.9848532116963,
+    "task_f1": 90.78486643317329,
+    "time_exact_accuracy": 45.64883907145404,
+    "time_close_accuracy_5m": 46.75099130229628,
+    "time_close_accuracy_10m": 48.145530189175666,
+    "duration_close_accuracy": 100.0,
+    "start_mae_minutes": 247.8981218038916,
+    "overlap_same_robot_count": 0.2916666666666667,
+    "predicted_tasks": 61.791666666666664,
+    "true_tasks": 62.333333333333336,
+    "matched_tasks": 56.666666666666664,
+    "num_alternative_schedules": 2.0
+  },
+  "leave_one_database_out": {
+    "nexus_10y": {
+      "task_precision": 90.46343115532882,
+      "task_recall": 91.9848532116963,
+      "task_f1": 90.78486643317329,
+      "time_exact_accuracy": 45.64883907145404,
+      "time_close_accuracy_5m": 46.75099130229628,
+      "time_close_accuracy_10m": 48.145530189175666,
+      "duration_close_accuracy": 100.0,
+      "start_mae_minutes": 247.8981218038916,
+      "overlap_same_robot_count": 0.2916666666666667,
+      "predicted_tasks": 61.791666666666664,
+      "true_tasks": 62.333333333333336,
+      "matched_tasks": 56.666666666666664,
+      "num_alternative_schedules": 2.0
+    }
+  },
+  "artifacts": {
+    "occurrence_checkpoint": "/home/miguel/Descargas/hybrid_schedule_project.1/reports/run_01/occurrence_model.pt",
+    "temporal_checkpoint": "/home/miguel/Descargas/hybrid_schedule_project.1/reports/run_01/temporal_model.pt"
+  }
+}

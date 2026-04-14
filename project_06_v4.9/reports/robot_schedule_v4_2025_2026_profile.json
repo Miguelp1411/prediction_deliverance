@@ -1,0 +1,92 @@
+{
+  "database_id": "robot_schedule_v4_2025_2026",
+  "num_events": 2356,
+  "num_weeks": 52,
+  "task_types": [
+    "Assist",
+    "Clean",
+    "Delivery",
+    "Patroll"
+  ],
+  "num_task_types": 4,
+  "num_devices": 1,
+  "is_single_device": true,
+  "task_weekly_frequency": {
+    "Assist": 11.326923076923077,
+    "Clean": 13.98076923076923,
+    "Delivery": 10.0,
+    "Patroll": 10.0
+  },
+  "task_duration_mean": {
+    "Assist": 15.0,
+    "Clean": 45.0,
+    "Delivery": 10.0,
+    "Patroll": 25.0
+  },
+  "task_duration_median": {
+    "Assist": 15.0,
+    "Clean": 45.0,
+    "Delivery": 10.0,
+    "Patroll": 25.0
+  },
+  "task_duration_std": {
+    "Assist": 0.0,
+    "Clean": 0.0,
+    "Delivery": 0.0,
+    "Patroll": 0.0
+  },
+  "overlap_count": 0,
+  "overlap_rate": 0.0,
+  "seasonal_strength": {
+    "Assist": 0.9926164331692541,
+    "Clean": 0.6663356504468715,
+    "Delivery": 1.0,
+    "Patroll": 0.0
+  },
+  "best_lags": [
+    4,
+    26,
+    52,
+    13
+  ],
+  "hour_distribution": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.44142614601018676,
+    0.07724957555178268,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.4350594227504245,
+    0.04626485568760611,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "day_distribution": [
+    0.17105263157894737,
+    0.17105263157894737,
+    0.08828522920203735,
+    0.17105263157894737,
+    0.17105263157894737,
+    0.1765704584040747,
+    0.050933786078098474
+  ],
+  "operating_hour_start": 8,
+  "operating_hour_end": 19,
+  "history_quality_score": 0.5930119760500401,
+  "date_range_start": "2028-01-03 08:00:00+00:00",
+  "date_range_end": "2028-12-31 18:00:00+00:00"
+}
