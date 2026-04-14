@@ -169,6 +169,10 @@ def build_future_history_tensor(series: SeriesBundle, window_weeks: int) -> np.n
 
 
 def per_task_recent_stats(series: SeriesBundle, target_week_idx: int, task_idx: int, window: int = 4) -> dict[str, float]:
+    if target_week_idx is None:
+        target_week_idx = len(series) 
+        
+    start = max(0, target_week_idx - window)
     start = max(0, target_week_idx - window)
     values = series.counts[start:target_week_idx, task_idx].astype(np.float32)
     if values.size == 0:
