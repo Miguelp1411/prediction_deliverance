@@ -35,6 +35,8 @@ class HybridWeekPredictor:
         self.num_macroblocks = num_macroblocks_per_day(self.bins_per_day, self.macroblock_bins)
 
     def _future_week_start(self, series: SeriesBundle) -> pd.Timestamp:
+        if len(series.week_starts) == 0:
+            return pd.Timestamp.now(tz=self.config['calendar']['timezone_default']).floor('D')
         if len(series.week_starts) < 2:
             return series.week_starts[-1] + pd.Timedelta(days=7)
         return series.week_starts[-1] + (series.week_starts[-1] - series.week_starts[-2])
@@ -85,6 +87,7 @@ class HybridWeekPredictor:
                 database_id=batch['database_id'],
                 robot_id=batch['robot_id'],
                 numeric_features=batch['numeric_features'],
+                template_count=batch['template_count'], # <-- Add this line
             )
             delta_values = torch.arange(-self.max_delta, self.max_delta + 1, device=self.device)
             pred_delta = delta_values[outputs['delta_logits'].argmax(dim=-1)].cpu().numpy()
@@ -255,9 +258,9 @@ class HybridWeekPredictor:
         explanation = {
             'database_id': series.database_id,
             'robot_id': series.robot_id,
-            'template_primary_week': str(series.week_starts[template.primary_week_idx]),
+            'template_primary_week': str(series.week_starts[template.primary_week_idx]) if template.primary_week_idx is not None else "N/A",
             'template_source_weeks': [str(series.week_starts[idx]) for idx in template.source_weeks],
-            'occurrence_debug': {self.context.task_names[k]: v for k, v in occ_debug.items()},
+            'occurrence_debug': occ_debug,  # <--- Asignación directa
             'num_predicted_events': len(payload),
             'temporal_decoder': {
                 'mode': 'hierarchical_day_macroblock_fine',

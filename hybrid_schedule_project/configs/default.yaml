@@ -15,7 +15,7 @@ models:
   occurrence:
     hidden_size: 128
     num_layers: 1
-    dropout: 0.15
+    dropout: 0.30
     task_embed_dim: 24
     database_embed_dim: 12
     robot_embed_dim: 12
@@ -40,7 +40,7 @@ training:
   lr_temporal: 3.0e-4
   weight_decay: 1.0e-4
   epochs_occurrence: 100
-  epochs_temporal: 100
+  epochs_temporal: 150
   patience: 20
   amp: false
   num_workers: 0

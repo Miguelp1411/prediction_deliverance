@@ -13,10 +13,8 @@ OCC_EXCLUDE = {'target_count', 'change_target', 'delta_target', 'anchor_start', 
 TMP_EXCLUDE = {'target_count', 'change_target', 'delta_target', 'anchor_start', 'anchor_duration', 'target_start', 'target_duration', 'day_target', 'macroblock_target', 'fine_offset_target', 'duration_delta', 'template_count'}
 
 
-
 def _move_batch(batch: dict[str, torch.Tensor], device: torch.device) -> dict[str, torch.Tensor]:
     return {k: v.to(device) for k, v in batch.items()}
-
 
 
 def _mean_dict(rows: list[dict[str, float]]) -> dict[str, float]:
@@ -24,7 +22,6 @@ def _mean_dict(rows: list[dict[str, float]]) -> dict[str, float]:
         return {}
     keys = sorted({k for row in rows for k in row.keys()})
     return {k: float(sum(r.get(k, 0.0) for r in rows) / len(rows)) for k in keys}
-
 
 
 def _fit_loop(model, train_loader, val_loader, optimizer, loss_fn: Callable, metrics_fn: Callable, forward_keys_exclude: set[str], device: torch.device, epochs: int, patience: int, model_name: str, logger):
@@ -39,6 +36,7 @@ def _fit_loop(model, train_loader, val_loader, optimizer, loss_fn: Callable, met
         model.train()
         train_losses = []
         train_metrics_rows = []
+
         for batch in train_loader:
             batch = _move_batch(batch, device)
             kwargs = {k: batch[k] for k in batch.keys() if k not in forward_keys_exclude}
@@ -75,6 +73,7 @@ def _fit_loop(model, train_loader, val_loader, optimizer, loss_fn: Callable, met
         row.update(val_metrics)
         logger.log_epoch(row)
         all_rows.append(row)
+
         metrics_str = ', '.join(f'{k}={v:.3f}' for k, v in val_metrics.items())
         print(f'[{model_name}] epoch {epoch:03d} | train_loss={row["train_loss"]:.4f} | val_loss={row["val_loss"]:.4f} | {metrics_str}', flush=True)
 
@@ -93,7 +92,6 @@ def _fit_loop(model, train_loader, val_loader, optimizer, loss_fn: Callable, met
     return model, best_metrics, all_rows
 
 
-
 def fit_occurrence_model(model, train_loader, val_loader, optimizer, device, epochs, patience, logger, max_delta: int):
     return _fit_loop(
         model=model,
@@ -109,7 +107,6 @@ def fit_occurrence_model(model, train_loader, val_loader, optimizer, device, epo
         model_name='occurrence_residual',
         logger=logger,
     )
-
 
 
 def fit_temporal_model(model, train_loader, val_loader, optimizer, device, epochs, patience, logger, bins_per_day: int, macroblock_bins: int, bin_minutes: int):

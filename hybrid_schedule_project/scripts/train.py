@@ -37,6 +37,8 @@ def main() -> None:
         cfg['models']['temporal']['hidden_size'] = 64
         cfg['splits']['backtest_weeks'] = min(4, int(cfg['splits']['backtest_weeks']))
     seed_everything(int(cfg['seed']))
+    torch.backends.cudnn.enabled = False
+    torch.backends.cudnn.benchmark = False
     torch.set_num_threads(min(4, os.cpu_count() or 1))
     device = get_device()
 
