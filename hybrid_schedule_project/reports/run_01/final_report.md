@@ -10,27 +10,27 @@
 
 ## Occurrence residual model
 
-- val count_exact_acc: **34.22%**
-- val close_acc_1: **74.38%**
-- val close_acc_2: **90.62%**
-- val count_mae: **1.059**
-- val change_acc: **73.91%**
+- val count_exact_acc: **38.28%**
+- val close_acc_1: **79.06%**
+- val close_acc_2: **92.81%**
+- val count_mae: **0.944**
+- val change_acc: **74.53%**
 
 ## Temporal residual model
 
-- val start_exact_acc: **35.99%**
-- val start_tol_5m: **36.76%**
-- val start_tol_10m: **41.17%**
-- val start_mae_minutes: **200.14 min**
+- val start_exact_acc: **35.37%**
+- val start_tol_5m: **36.16%**
+- val start_tol_10m: **40.07%**
+- val start_mae_minutes: **206.70 min**
 - val duration_mae_minutes: **0.00 min**
 
 ## Weekly backtest
 
-- task_f1: **82.66%**
-- time_exact_accuracy: **26.32%**
-- time_close_accuracy_5m: **28.41%**
-- time_close_accuracy_10m: **31.14%**
-- start_mae_minutes: **393.96 min**
+- task_f1: **82.45%**
+- time_exact_accuracy: **24.74%**
+- time_close_accuracy_5m: **26.84%**
+- time_close_accuracy_10m: **29.23%**
+- start_mae_minutes: **401.32 min**
 - overlap_same_robot_count: **0**
 
 ## Interpretación

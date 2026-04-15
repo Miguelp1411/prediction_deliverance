@@ -15,15 +15,15 @@ models:
   occurrence:
     hidden_size: 128
     num_layers: 1
-    dropout: 0.30
+    dropout: 0.40
     task_embed_dim: 24
     database_embed_dim: 12
     robot_embed_dim: 12
     max_delta: 12
     change_loss_weight: 0.25
   temporal:
-    hidden_size: 160
-    num_layers: 2
+    hidden_size: 256
+    num_layers: 5
     dropout: 0.20
     task_embed_dim: 24
     database_embed_dim: 12
