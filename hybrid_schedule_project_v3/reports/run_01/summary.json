@@ -1,0 +1,76 @@
+{
+  "profile": {
+    "num_events": 32732,
+    "num_databases": 1,
+    "num_robots": 1,
+    "num_tasks": 4,
+    "tasks": [
+      "Assist",
+      "Clean",
+      "Delivery",
+      "Patroll"
+    ],
+    "date_min": "2026-01-05 09:00:00+01:00",
+    "date_max": "2036-01-05 00:25:00+01:00",
+    "num_weeks": 522,
+    "duration_minutes_min": 10.0,
+    "duration_minutes_median": 25.0,
+    "duration_minutes_max": 45.0,
+    "weekly_tasks_mean": 62.70498084291188,
+    "weekly_tasks_std": 16.668529028694717,
+    "overlap_same_robot_count": 0,
+    "overlap_breakdown": {
+      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 0
+    },
+    "by_database": {
+      "nexus_10y": {
+        "events": 32732,
+        "robots": 1,
+        "weeks": 522,
+        "tasks": [
+          "Assist",
+          "Clean",
+          "Delivery",
+          "Patroll"
+        ],
+        "weekly_mean": 62.70498084291188,
+        "duration_median": 25.0
+      }
+    }
+  },
+  "occurrence": {
+    "change_acc": 91.82692307692308,
+    "close_acc_1": 78.125,
+    "close_acc_2": 92.0673076923077,
+    "count_exact_acc": 38.70192307692308,
+    "count_mae": 0.9735576923076923,
+    "expected_count_mae": 0.9903963162348821,
+    "selection_score": 63.47831858121432
+  },
+  "temporal": {
+    "duration_mae_minutes": 2.9673655200930476e-05,
+    "start_exact_acc": 18.780339805825243,
+    "start_mae_minutes": 267.1131674757282,
+    "start_tol_10m": 26.7748786407767,
+    "start_tol_5m": 22.299757281553397,
+    "selection_score": 14.318141720200734
+  },
+  "backtest": {
+    "task_precision": 92.83090404374326,
+    "task_recall": 83.80622744987063,
+    "task_f1": 87.49122630185269,
+    "time_exact_accuracy": 19.137632333702324,
+    "time_close_accuracy_5m": 21.46569834931981,
+    "time_close_accuracy_10m": 23.606825830195067,
+    "duration_close_accuracy": 100.0,
+    "start_mae_minutes": 619.9162560638852,
+    "overlap_same_robot_count": 0.0,
+    "predicted_tasks": 57.25,
+    "true_tasks": 62.333333333333336,
+    "matched_tasks": 53.791666666666664
+  },
+  "artifacts": {
+    "occurrence_checkpoint": "/home/miguel/Escritorio/prediction_deliverance/hybrid_schedule_project_v3/reports/run_01/occurrence_model.pt",
+    "temporal_checkpoint": "/home/miguel/Escritorio/prediction_deliverance/hybrid_schedule_project_v3/reports/run_01/temporal_model.pt"
+  }
+}
