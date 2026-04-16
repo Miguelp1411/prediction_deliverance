@@ -1,0 +1,64 @@
+seed: 42
+
+calendar:
+  timezone_default: Europe/Madrid
+  bin_minutes: 5
+  window_weeks: 16
+  min_history_weeks: 24
+  topk_templates: 5
+
+splits:
+  train_ratio: 0.80
+  backtest_weeks: 24
+
+models:
+  occurrence:
+    hidden_size: 128
+    num_layers: 1
+    dropout: 0.3
+    task_embed_dim: 24
+    database_embed_dim: 12
+    robot_embed_dim: 12
+    max_delta: 12
+    change_loss_weight: 0.25
+    expected_count_mae_weight: 0.15
+  temporal:
+    hidden_size: 160
+    num_layers: 2
+    dropout: 0.25
+    task_embed_dim: 24
+    database_embed_dim: 12
+    robot_embed_dim: 12
+    day_offset_radius: 3
+    local_offset_radius: 72
+    topk_day: 3
+    topk_local: 6
+    day_label_smoothing: 0.05
+    local_label_smoothing: 0.03
+    duration_blend_alpha: 0.30
+
+training:
+  batch_size_occurrence: 32
+  batch_size_temporal: 64
+  lr_occurrence: 5.0e-4
+  lr_temporal: 3.0e-4
+  weight_decay: 1.0e-4
+  epochs_occurrence: 200
+  epochs_temporal: 150
+  patience: 20
+  amp: false
+  num_workers: 0
+
+scheduler:
+  movement_penalty: 0.03
+  duration_penalty: 0.02
+  template_bonus: 0.25
+  prohibit_overlap: true
+  min_gap_bins: 0
+  use_exact_milp: true
+  max_solver_seconds: 20
+
+reporting:
+  save_plots: true
+  save_epoch_jsonl: true
+  save_csv: true
