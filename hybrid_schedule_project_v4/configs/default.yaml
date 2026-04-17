@@ -48,20 +48,19 @@ training:
   amp: false
   num_workers: 0
 scheduler:
-  movement_penalty: 0.03
-  duration_penalty: 0.02
-  template_bonus: 0.25
+  backend: cp_sat
   prohibit_overlap: true
   min_gap_bins: 0
-  use_exact_milp: true
   max_exact_events: 128
   max_exact_variables: 2500
   max_solver_seconds: 20
-  empirical_slot_neighbor_radius: 1
-  empirical_candidate_limit: 24
-  empirical_support_weight: 1.25
-  empirical_model_weight: 0.75
-  empirical_out_of_range_penalty: -0.75
+  num_search_workers: 8
+  objective_scale: 1000
+  empirical_model_weight: 1.0
+  empirical_support_weight: 0.8
+  movement_penalty: 0.35
+  day_penalty: 0.90
+  duration_penalty: 0.20
 reporting:
   save_plots: true
   save_epoch_jsonl: true

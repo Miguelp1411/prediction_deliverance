@@ -15,7 +15,8 @@ dependencies = [
   "torch",
   "scipy",
   "scikit-learn",
-  "matplotlib"
+  "matplotlib",
+  "ortools"
 ]
 
 [tool.setuptools]

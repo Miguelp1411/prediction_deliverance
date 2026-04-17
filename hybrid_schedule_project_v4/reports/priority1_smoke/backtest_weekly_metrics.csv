@@ -1,0 +1,2 @@
+task_precision,task_recall,task_f1,time_exact_accuracy,time_close_accuracy_5m,time_close_accuracy_10m,duration_close_accuracy,start_mae_minutes,overlap_same_robot_count,predicted_tasks,true_tasks,matched_tasks,database_id,robot_id,target_week
+62.82051282051282,100.0,77.16535433070865,18.367346938775512,18.367346938775512,22.448979591836736,100.0,523.9795918367347,7.0,78.0,49.0,49.0,nexus_10y,nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x,2034-03-27 00:00:00+02:00

@@ -131,6 +131,7 @@ class HybridWeekPredictor:
         candidate_mask_rows = []
         candidate_start_rows = []
         candidate_duration_rows = []
+        candidate_support_rows = []
         slot_rows = []
         for slot in planned_slots:
             anchor = int(slot['anchor_start_bin'])
@@ -170,6 +171,7 @@ class HybridWeekPredictor:
             candidate_features: list[np.ndarray] = []
             candidate_starts: list[int] = []
             candidate_durations: list[int] = []
+            candidate_supports: list[float] = []
             for cand_start, cand_duration, cand_support in candidates[:self.temporal_max_candidates]:
                 candidate_features.append(build_temporal_candidate_features(
                     series,
@@ -188,6 +190,7 @@ class HybridWeekPredictor:
                 ))
                 candidate_starts.append(int(cand_start))
                 candidate_durations.append(max(1, int(cand_duration)))
+                candidate_supports.append(float(cand_support))
             if not candidate_features:
                 continue
             feature_dim = len(candidate_features[0])
@@ -195,22 +198,28 @@ class HybridWeekPredictor:
             candidate_mask_arr = np.zeros(self.temporal_max_candidates, dtype=np.bool_)
             candidate_start_arr = np.zeros(self.temporal_max_candidates, dtype=np.int64)
             candidate_duration_arr = np.ones(self.temporal_max_candidates, dtype=np.float32)
+            candidate_support_arr = np.zeros(self.temporal_max_candidates, dtype=np.float32)
+
             candidate_count = len(candidate_features)
             candidate_features_arr[:candidate_count] = np.stack(candidate_features, axis=0)
             candidate_mask_arr[:candidate_count] = True
             candidate_start_arr[:candidate_count] = np.asarray(candidate_starts, dtype=np.int64)
             candidate_duration_arr[:candidate_count] = np.asarray(candidate_durations, dtype=np.float32)
+            candidate_support_arr[:candidate_count] = np.asarray(candidate_supports, dtype=np.float32)
             candidate_feature_rows.append(candidate_features_arr)
             candidate_mask_rows.append(candidate_mask_arr)
             candidate_start_rows.append(candidate_start_arr)
             candidate_duration_rows.append(candidate_duration_arr)
             numeric_rows.append(numeric)
             task_ids.append(int(slot['task_idx']))
+            candidate_support_rows.append(candidate_support_arr)
             slot_rows.append({
                 'robot_id': series.robot_id,
                 'task_idx': int(slot['task_idx']),
                 'task_type': slot['task_type'],
+                'slot_id': int(slot['slot_id']),
                 'anchor_start_bin': anchor,
+                'anchor_duration_bins': anchor_duration,
             })
 
         if not slot_rows:
@@ -238,7 +247,12 @@ class HybridWeekPredictor:
                 final_candidates = [{
                     'start_bin': int(candidate_start_rows[idx][cand_idx]),
                     'duration_bins': int(round(float(candidate_duration_rows[idx][cand_idx]))),
-                    'score': float(logits[idx, cand_idx]),
+                    'score': float(logits[idx, cand_idx]),  # compatibilidad hacia atrás
+                    'model_score': float(logits[idx, cand_idx]),
+                    'empirical_support': float(candidate_support_rows[idx][cand_idx]),
+                    'anchor_start_bin': int(slot_row['anchor_start_bin']),
+                    'anchor_duration_bins': int(slot_row['anchor_duration_bins']),
+                    'slot_id': int(slot_row['slot_id']),
                 } for cand_idx in ordered[:max(1, min(self.temporal_solver_candidates, len(ordered)))]]
                 scheduled_events.append({
                     'robot_id': slot_row['robot_id'],
@@ -262,11 +276,8 @@ class HybridWeekPredictor:
         candidate_events = self._temporal_candidates(series, planned_slots, empirical_template=empirical_template)
         solved = solve_week_schedule(
             candidate_events,
-            use_exact_milp=bool(self.config['scheduler']['use_exact_milp']),
-            min_gap_bins=int(self.config['scheduler']['min_gap_bins']),
-            max_exact_events=int(self.config['scheduler'].get('max_exact_events', 128)),
-            max_exact_variables=int(self.config['scheduler'].get('max_exact_variables', 2500)),
-            max_solver_seconds=int(self.config['scheduler']['max_solver_seconds']),
+            scheduler_cfg=self.config['scheduler'],
+            bin_minutes=self.bin_minutes,
         )
         week_start = self._future_week_start(series)
         payload = []

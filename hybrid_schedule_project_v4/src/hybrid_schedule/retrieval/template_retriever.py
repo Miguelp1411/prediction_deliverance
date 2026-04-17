@@ -78,9 +78,11 @@ def build_template_week(series: SeriesBundle, target_week_idx: int | None, topk:
     primary = retrieved[0].week_idx
     weights = np.asarray([np.exp(r.score) for r in retrieved], dtype=np.float64)
     weights = weights / max(weights.sum(), 1e-8)
-    counts = np.zeros(series.counts.shape[1], dtype=np.int64)
+    weighted_counts = np.zeros(series.counts.shape[1], dtype=np.float64)
     for weight, item in zip(weights, retrieved):
-        counts += np.rint(weight * series.counts[item.week_idx]).astype(np.int64)
+        weighted_counts += weight * series.counts[item.week_idx].astype(np.float64)
+
+    counts = np.rint(weighted_counts).astype(np.int64)
     counts = np.clip(counts, 0, None)
 
     support_by_slot: dict[tuple[int, int], float] = {}

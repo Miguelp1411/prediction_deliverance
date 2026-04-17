@@ -36,7 +36,7 @@ def main() -> None:
         cfg['models']['occurrence']['hidden_size'] = 48
         cfg['models']['temporal']['hidden_size'] = 64
         cfg['splits']['backtest_weeks'] = min(1, int(cfg['splits']['backtest_weeks']))
-        cfg['scheduler']['use_exact_milp'] = False
+        cfg['scheduler']['backend'] = 'greedy'
         cfg['scheduler']['max_solver_seconds'] = 3
     seed_everything(int(cfg['seed']))
     torch.backends.cudnn.enabled = False
