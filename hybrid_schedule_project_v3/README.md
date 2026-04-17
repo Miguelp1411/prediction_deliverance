@@ -12,7 +12,7 @@ Proyecto rehacer desde cero el forecasting semanal de agendas operativas con est
 Dado el histórico de una o varias bases de datos con eventos tipo agenda:
 
 - predice el número de ocurrencias por tipo de tarea para la semana objetivo,
-- propone ajustes residuales de tiempo y duración para cada slot plantilla,
+- rankea candidatos temporales históricos para cada slot plantilla,
 - genera una agenda semanal final sin solapes por robot/dispositivo,
 - produce reporting detallado durante entrenamiento y un informe final reproducible.
 
@@ -23,7 +23,7 @@ Dado el histórico de una o varias bases de datos con eventos tipo agenda:
 2) profiling por base / robot
 3) retrieval de semanas análogas
 4) red residual de occurrence
-5) red residual temporal (top-k candidatos)
+5) ranker temporal sobre banco histórico de candidatos
 6) scheduler MILP exacto
 7) backtesting + reporting
 ```
@@ -111,6 +111,6 @@ Este proyecto está pensado para el caso descrito en tu análisis:
 Por eso la salida final **no** depende solo de una red. La red aporta señales residuales, pero la coherencia semanal la garantiza el solver.
 
 
-## Actualización temporal jerárquica
+## Modelo temporal actual
 
-La versión actual del modelo temporal ya no usa un único head plano de tiempo. Ahora separa la predicción en tres niveles: `day_head` (día de la semana), `macroblock_head` (bloque horario configurable, por defecto 60 minutos) y `fine_offset_head` (offset fino dentro del bloque). Esto reduce errores gruesos y mejora la calidad de candidatos para el scheduler.
+La versión actual del temporal no predice offsets absolutos. Construye un banco de candidatos reales a partir de las `top-k` semanas históricas más parecidas, genera features por `slot x candidato` y entrena un ranker listwise optimizado directamente por cercanía temporal. El solver final mantiene la coherencia global semanal.

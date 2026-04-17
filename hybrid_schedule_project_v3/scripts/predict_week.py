@@ -7,7 +7,7 @@ from hybrid_schedule.config import load_config
 from hybrid_schedule.data import load_all_events, load_registry
 from hybrid_schedule.data.features import build_global_context, build_future_history_tensor
 from hybrid_schedule.inference import HybridWeekPredictor
-from hybrid_schedule.models import OccurrenceResidualNet, TemporalResidualNet
+from hybrid_schedule.models import OccurrenceResidualNet, TemporalRankingNet
 from hybrid_schedule.utils import get_device, read_checkpoint
 
 
@@ -34,12 +34,14 @@ def main() -> None:
     occ_payload = read_checkpoint(occ_ckpt, map_location=device.type)
     tmp_payload = read_checkpoint(tmp_ckpt, map_location=device.type)
     ckpt_cfg = occ_payload.get('metadata', {}).get('config') or cfg
+    temporal_model_type = tmp_payload.get('metadata', {}).get('temporal_model_type', 'legacy_offsets')
+    if temporal_model_type != 'ranking':
+        raise RuntimeError('El checkpoint temporal es de la arquitectura antigua por offsets. Reentrena el modelo temporal con la nueva versión para poder predecir.')
     sample_series = next(iter(context.series.values()))
     history_dim = int(build_future_history_tensor(sample_series, int(ckpt_cfg['calendar']['window_weeks']), bin_minutes=int(ckpt_cfg['calendar']['bin_minutes'])).shape[-1])
-    day_offset_radius = int(ckpt_cfg['models']['temporal'].get('day_offset_radius', 3))
-    local_offset_radius = int(ckpt_cfg['models']['temporal'].get('local_offset_radius', 72))
     occ_numeric_dim = int(occ_payload.get('metadata', {}).get('occ_numeric_dim', 19))
     tmp_numeric_dim = int(tmp_payload.get('metadata', {}).get('tmp_numeric_dim', 18))
+    tmp_candidate_dim = int(tmp_payload.get('metadata', {}).get('tmp_candidate_dim', 18))
 
     occ_model = OccurrenceResidualNet(
         input_dim=history_dim,
@@ -55,7 +57,7 @@ def main() -> None:
         max_delta=int(ckpt_cfg['models']['occurrence']['max_delta']),
         numeric_feature_dim=occ_numeric_dim,
     ).to(device)
-    tmp_model = TemporalResidualNet(
+    tmp_model = TemporalRankingNet(
         input_dim=history_dim,
         num_tasks=len(context.task_names),
         num_databases=len(context.database_to_idx),
@@ -66,9 +68,8 @@ def main() -> None:
         task_embed_dim=int(ckpt_cfg['models']['temporal']['task_embed_dim']),
         database_embed_dim=int(ckpt_cfg['models']['temporal']['database_embed_dim']),
         robot_embed_dim=int(ckpt_cfg['models']['temporal']['robot_embed_dim']),
-        day_offset_radius=day_offset_radius,
-        local_offset_radius=local_offset_radius,
         numeric_feature_dim=tmp_numeric_dim,
+        candidate_feature_dim=tmp_candidate_dim,
     ).to(device)
 
     occ_model.load_state_dict(occ_payload['state_dict'])

@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from hybrid_schedule.config import load_config
 from hybrid_schedule.data import load_all_events, load_registry, profile_events_dataframe
 from hybrid_schedule.data.features import build_global_context
-from hybrid_schedule.models import OccurrenceResidualNet, TemporalResidualNet
+from hybrid_schedule.models import OccurrenceResidualNet, TemporalRankingNet
 from hybrid_schedule.reporting import RunLogger, build_final_report, save_summary, save_training_plots
 from hybrid_schedule.training import OccurrenceDataset, TemporalDataset, build_time_split, fit_occurrence_model, fit_temporal_model
 from hybrid_schedule.training.datasets import predict_occurrence_counts_for_indices
@@ -57,10 +57,6 @@ def main() -> None:
     if args.smoke:
         train_indices = train_indices[:40]
         val_indices = val_indices[:12]
-
-    bins_per_day = (24 * 60) // int(cfg['calendar']['bin_minutes'])
-    day_offset_radius = int(cfg['models']['temporal'].get('day_offset_radius', 3))
-    local_offset_radius = int(cfg['models']['temporal'].get('local_offset_radius', 72))
 
     occurrence_ds_train = OccurrenceDataset(context, train_indices, window_weeks=int(cfg['calendar']['window_weeks']), topk_templates=int(cfg['calendar']['topk_templates']), max_delta=int(cfg['models']['occurrence']['max_delta']), bin_minutes=int(cfg['calendar']['bin_minutes']))
     occurrence_ds_val = OccurrenceDataset(context, val_indices, window_weeks=int(cfg['calendar']['window_weeks']), topk_templates=int(cfg['calendar']['topk_templates']), max_delta=int(cfg['models']['occurrence']['max_delta']), bin_minutes=int(cfg['calendar']['bin_minutes']))
@@ -119,9 +115,12 @@ def main() -> None:
         train_indices,
         window_weeks=int(cfg['calendar']['window_weeks']),
         topk_templates=int(cfg['calendar']['topk_templates']),
-        bins_per_day=bins_per_day,
-        day_offset_radius=day_offset_radius,
-        local_offset_radius=local_offset_radius,
+        candidate_topk_templates=int(cfg['models']['temporal'].get('candidate_topk_templates', cfg['calendar'].get('temporal_candidate_topk_templates', 20))),
+        candidate_neighbor_radius=int(cfg['models']['temporal'].get('candidate_neighbor_radius', 1)),
+        max_candidates=int(cfg['models']['temporal'].get('max_candidates', 32)),
+        start_temperature_bins=float(cfg['models']['temporal'].get('start_temperature_bins', 2.0)),
+        duration_temperature_bins=float(cfg['models']['temporal'].get('duration_temperature_bins', 1.0)),
+        duration_cost_weight=float(cfg['models']['temporal'].get('duration_cost_weight', 0.35)),
         max_slot_prototypes=int(cfg['calendar'].get('max_slot_prototypes', 32)),
         count_lookup=count_lookup,
         bin_minutes=int(cfg['calendar']['bin_minutes']),
@@ -131,9 +130,12 @@ def main() -> None:
         val_indices,
         window_weeks=int(cfg['calendar']['window_weeks']),
         topk_templates=int(cfg['calendar']['topk_templates']),
-        bins_per_day=bins_per_day,
-        day_offset_radius=day_offset_radius,
-        local_offset_radius=local_offset_radius,
+        candidate_topk_templates=int(cfg['models']['temporal'].get('candidate_topk_templates', cfg['calendar'].get('temporal_candidate_topk_templates', 20))),
+        candidate_neighbor_radius=int(cfg['models']['temporal'].get('candidate_neighbor_radius', 1)),
+        max_candidates=int(cfg['models']['temporal'].get('max_candidates', 32)),
+        start_temperature_bins=float(cfg['models']['temporal'].get('start_temperature_bins', 2.0)),
+        duration_temperature_bins=float(cfg['models']['temporal'].get('duration_temperature_bins', 1.0)),
+        duration_cost_weight=float(cfg['models']['temporal'].get('duration_cost_weight', 0.35)),
         max_slot_prototypes=int(cfg['calendar'].get('max_slot_prototypes', 32)),
         count_lookup=count_lookup,
         bin_minutes=int(cfg['calendar']['bin_minutes']),
@@ -146,7 +148,8 @@ def main() -> None:
 
     sample_tmp = temporal_ds_train[0]
     tmp_numeric_dim = int(sample_tmp['numeric_features'].shape[-1])
-    tmp_model = TemporalResidualNet(
+    tmp_candidate_dim = int(sample_tmp['candidate_features'].shape[-1])
+    tmp_model = TemporalRankingNet(
         input_dim=input_dim,
         num_tasks=len(context.task_names),
         num_databases=len(context.database_to_idx),
@@ -157,9 +160,8 @@ def main() -> None:
         task_embed_dim=int(cfg['models']['temporal']['task_embed_dim']),
         database_embed_dim=int(cfg['models']['temporal']['database_embed_dim']),
         robot_embed_dim=int(cfg['models']['temporal']['robot_embed_dim']),
-        day_offset_radius=day_offset_radius,
-        local_offset_radius=local_offset_radius,
         numeric_feature_dim=tmp_numeric_dim,
+        candidate_feature_dim=tmp_candidate_dim,
     ).to(device)
 
     tmp_optimizer = torch.optim.AdamW(tmp_model.parameters(), lr=float(cfg['training']['lr_temporal']), weight_decay=float(cfg['training']['weight_decay']))
@@ -172,9 +174,8 @@ def main() -> None:
         epochs=int(cfg['training']['epochs_temporal']),
         patience=int(cfg['training']['patience']),
         logger=logger,
-        bins_per_day=bins_per_day,
-        local_offset_radius=local_offset_radius,
         bin_minutes=int(cfg['calendar']['bin_minutes']),
+        expected_cost_weight=float(cfg['models']['temporal'].get('expected_cost_weight', 0.30)),
     )
 
     logger.save_csv()
@@ -184,7 +185,7 @@ def main() -> None:
     _, backtest_summary = run_holdout_backtest(context, backtest_indices, cfg, occ_model, tmp_model, device, output_dir)
 
     save_checkpoint(output_dir / 'occurrence_model.pt', occ_model, {'config': cfg, 'input_dim': input_dim, 'occ_numeric_dim': occ_numeric_dim})
-    save_checkpoint(output_dir / 'temporal_model.pt', tmp_model, {'config': cfg, 'input_dim': input_dim, 'tmp_numeric_dim': tmp_numeric_dim})
+    save_checkpoint(output_dir / 'temporal_model.pt', tmp_model, {'config': cfg, 'input_dim': input_dim, 'tmp_numeric_dim': tmp_numeric_dim, 'tmp_candidate_dim': tmp_candidate_dim, 'temporal_model_type': 'ranking'})
 
     summary = {
         'profile': profile,

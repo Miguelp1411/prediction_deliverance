@@ -1,0 +1,68 @@
+seed: 42
+calendar:
+  timezone_default: Europe/Madrid
+  bin_minutes: 5
+  window_weeks: 16
+  min_history_weeks: 24
+  topk_templates: 5
+  max_slot_prototypes: 48
+  temporal_candidate_topk_templates: 32
+splits:
+  train_ratio: 0.8
+  backtest_weeks: 24
+models:
+  occurrence:
+    hidden_size: 160
+    num_layers: 1
+    dropout: 0.25
+    task_embed_dim: 24
+    database_embed_dim: 12
+    robot_embed_dim: 12
+    max_delta: 12
+    change_loss_weight: 0.25
+    expected_count_mae_weight: 0.15
+  temporal:
+    hidden_size: 224
+    num_layers: 2
+    dropout: 0.2
+    task_embed_dim: 24
+    database_embed_dim: 12
+    robot_embed_dim: 12
+    candidate_topk_templates: 32
+    candidate_neighbor_radius: 2
+    max_candidates: 48
+    solver_candidates: 32
+    start_temperature_bins: 2.0
+    duration_temperature_bins: 1.0
+    duration_cost_weight: 0.35
+    expected_cost_weight: 0.35
+training:
+  batch_size_occurrence: 32
+  batch_size_temporal: 48
+  lr_occurrence: 0.0005
+  lr_temporal: 0.0003
+  weight_decay: 0.0001
+  epochs_occurrence: 200
+  epochs_temporal: 180
+  patience: 24
+  amp: false
+  num_workers: 0
+scheduler:
+  movement_penalty: 0.03
+  duration_penalty: 0.02
+  template_bonus: 0.25
+  prohibit_overlap: true
+  min_gap_bins: 0
+  use_exact_milp: true
+  max_exact_events: 128
+  max_exact_variables: 2500
+  max_solver_seconds: 20
+  empirical_slot_neighbor_radius: 1
+  empirical_candidate_limit: 24
+  empirical_support_weight: 1.25
+  empirical_model_weight: 0.75
+  empirical_out_of_range_penalty: -0.75
+reporting:
+  save_plots: true
+  save_epoch_jsonl: true
+  save_csv: true

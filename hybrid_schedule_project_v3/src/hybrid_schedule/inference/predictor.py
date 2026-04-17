@@ -11,15 +11,19 @@ import torch
 from hybrid_schedule.data.features import (
     GlobalContext,
     SeriesBundle,
-    assign_events_to_prototypes,
+    build_temporal_candidate_features,
     build_future_history_tensor,
     build_occurrence_numeric_features,
     build_temporal_numeric_features,
-    task_duration_median,
+    build_temporal_slot_context,
 )
-from hybrid_schedule.retrieval.template_retriever import build_template_week, propose_extra_slots
+from hybrid_schedule.retrieval.template_retriever import (
+    build_empirical_candidate_bank,
+    build_template_week,
+    gather_empirical_candidates,
+    propose_extra_slots,
+)
 from hybrid_schedule.scheduler import solve_week_schedule
-from hybrid_schedule.utils import index_to_day_offset, index_to_local_offset
 
 
 class HybridWeekPredictor:
@@ -34,18 +38,11 @@ class HybridWeekPredictor:
         self.bins_per_day = (24 * 60) // self.bin_minutes
         self.topk_templates = int(config['calendar']['topk_templates'])
         self.max_slot_prototypes = int(config['calendar'].get('max_slot_prototypes', 32))
-        self.temporal_candidate_topk_templates = int(config['calendar'].get('temporal_candidate_topk_templates', max(self.topk_templates, 20)))
+        self.temporal_candidate_topk_templates = int(config['models']['temporal'].get('candidate_topk_templates', config['calendar'].get('temporal_candidate_topk_templates', max(self.topk_templates, 20))))
         self.max_delta = int(config['models']['occurrence']['max_delta'])
-        self.topk_day = int(config['models']['temporal'].get('topk_day', 3))
-        self.topk_local = int(config['models']['temporal'].get('topk_local', 6))
-        self.day_offset_radius = int(config['models']['temporal'].get('day_offset_radius', 3))
-        self.local_offset_radius = int(config['models']['temporal'].get('local_offset_radius', 72))
-        self.duration_blend_alpha = float(config['models']['temporal'].get('duration_blend_alpha', 0.30))
-        self.empirical_slot_neighbor_radius = int(config['scheduler'].get('empirical_slot_neighbor_radius', 1))
-        self.empirical_candidate_limit = int(config['scheduler'].get('empirical_candidate_limit', 24))
-        self.empirical_support_weight = float(config['scheduler'].get('empirical_support_weight', 1.25))
-        self.empirical_model_weight = float(config['scheduler'].get('empirical_model_weight', 0.75))
-        self.empirical_out_of_range_penalty = float(config['scheduler'].get('empirical_out_of_range_penalty', -0.75))
+        self.temporal_candidate_neighbor_radius = int(config['models']['temporal'].get('candidate_neighbor_radius', 1))
+        self.temporal_max_candidates = max(1, int(config['models']['temporal'].get('max_candidates', 32)))
+        self.temporal_solver_candidates = max(1, int(config['models']['temporal'].get('solver_candidates', self.temporal_max_candidates)))
 
     def _future_week_start(self, series: SeriesBundle) -> pd.Timestamp:
         if len(series.week_starts) == 0:
@@ -148,55 +145,6 @@ class HybridWeekPredictor:
         planned.sort(key=lambda x: (x['anchor_start_bin'], x['task_type'], x['slot_id']))
         return planned
 
-    def _build_empirical_candidate_bank(self, series: SeriesBundle, template) -> dict[int, dict[str, dict]]:
-        week_weights = np.exp(np.asarray(template.week_scores, dtype=np.float64))
-        bank: dict[int, dict[str, dict]] = {}
-        for task_idx in range(len(self.context.task_names)):
-            prototypes = template.slot_prototypes_by_task.get(task_idx, [])
-            slot_bank: dict[int, dict[tuple[int, int], float]] = {}
-            task_bank: dict[tuple[int, int], float] = {}
-            if not prototypes:
-                bank[task_idx] = {'slot': slot_bank, 'task': task_bank}
-                continue
-            for weight, week_idx in zip(week_weights.tolist(), template.source_weeks):
-                task_events = [evt for evt in series.events[week_idx] if evt.task_idx == task_idx]
-                if not task_events:
-                    continue
-                assignments = assign_events_to_prototypes(task_events, prototypes)
-                for slot_id, evt, _ in assignments:
-                    key = (int(evt.start_bin), int(evt.duration_bins))
-                    slot_bank.setdefault(int(slot_id), {})
-                    slot_bank[int(slot_id)][key] = slot_bank[int(slot_id)].get(key, 0.0) + float(weight)
-                    task_bank[key] = task_bank.get(key, 0.0) + float(weight)
-            bank[task_idx] = {'slot': slot_bank, 'task': task_bank}
-        return bank
-
-    def _score_empirical_candidate(
-        self,
-        anchor: int,
-        anchor_duration: int,
-        start_bin: int,
-        duration_bins: int,
-        support_score: float,
-        day_probs: np.ndarray,
-        local_probs: np.ndarray,
-    ) -> float:
-        diff = int(start_bin) - int(anchor)
-        day_offset = int(round(diff / self.bins_per_day))
-        local_offset = int(diff - day_offset * self.bins_per_day)
-        distance = abs(diff)
-        score = self.empirical_support_weight * float(support_score)
-        if abs(day_offset) <= self.day_offset_radius and abs(local_offset) <= self.local_offset_radius:
-            day_idx = day_offset + self.day_offset_radius
-            local_idx = local_offset + self.local_offset_radius
-            score += self.empirical_model_weight * float(np.log(day_probs[day_idx] + 1e-9) + np.log(local_probs[local_idx] + 1e-9))
-        else:
-            score += self.empirical_out_of_range_penalty
-        score += float(self.config['scheduler']['template_bonus']) * (1.0 if int(start_bin) == int(anchor) else 0.0)
-        score -= float(self.config['scheduler']['movement_penalty']) * distance
-        score -= float(self.config['scheduler']['duration_penalty']) * abs(int(duration_bins) - int(anchor_duration))
-        return score
-
     def _temporal_candidates(self, series: SeriesBundle, planned_slots: list[dict[str, Any]], empirical_template=None) -> list[dict[str, Any]]:
         if not planned_slots:
             return []
@@ -209,16 +157,27 @@ class HybridWeekPredictor:
             topk=self.temporal_candidate_topk_templates,
             max_slot_prototypes=self.max_slot_prototypes,
         )
-        empirical_bank = self._build_empirical_candidate_bank(series, empirical_template)
+        empirical_bank = build_empirical_candidate_bank(series, empirical_template)
         history_batch = np.repeat(history[None, ...], len(planned_slots), axis=0)
         numeric_rows = []
         task_ids = []
-        anchor_starts = []
-        anchor_durations = []
+        candidate_feature_rows = []
+        candidate_mask_rows = []
+        candidate_start_rows = []
+        candidate_duration_rows = []
+        slot_rows = []
         for slot in planned_slots:
             anchor = int(slot['anchor_start_bin'])
             anchor_duration = int(slot['anchor_duration_bins'])
-            numeric_rows.append(build_temporal_numeric_features(
+            slot_context = build_temporal_slot_context(
+                series,
+                None,
+                int(slot['task_idx']),
+                int(slot['slot_id']),
+                max_slots=self.max_slot_prototypes,
+                bin_minutes=self.bin_minutes,
+            )
+            numeric = build_temporal_numeric_features(
                 series,
                 None,
                 int(slot['task_idx']),
@@ -230,87 +189,94 @@ class HybridWeekPredictor:
                 float(slot['support']),
                 max_slots=self.max_slot_prototypes,
                 bin_minutes=self.bin_minutes,
-            ))
+                slot_context=slot_context,
+            )
+            candidates = gather_empirical_candidates(
+                empirical_bank,
+                task_idx=int(slot['task_idx']),
+                slot_id=int(slot['slot_id']),
+                neighbor_radius=self.temporal_candidate_neighbor_radius,
+                limit=self.temporal_max_candidates,
+                fallback_anchor=(anchor, anchor_duration),
+            )
+            candidate_features: list[np.ndarray] = []
+            candidate_starts: list[int] = []
+            candidate_durations: list[int] = []
+            for cand_start, cand_duration, cand_support in candidates[:self.temporal_max_candidates]:
+                candidate_features.append(build_temporal_candidate_features(
+                    series,
+                    None,
+                    int(slot['task_idx']),
+                    int(slot['slot_id']),
+                    anchor,
+                    anchor_duration,
+                    int(cand_start),
+                    int(cand_duration),
+                    float(cand_support),
+                    max_slots=self.max_slot_prototypes,
+                    bin_minutes=self.bin_minutes,
+                    slot_context=slot_context,
+                ))
+                candidate_starts.append(int(cand_start))
+                candidate_durations.append(max(1, int(cand_duration)))
+            if not candidate_features:
+                continue
+            feature_dim = len(candidate_features[0])
+            candidate_features_arr = np.zeros((self.temporal_max_candidates, feature_dim), dtype=np.float32)
+            candidate_mask_arr = np.zeros(self.temporal_max_candidates, dtype=np.bool_)
+            candidate_start_arr = np.zeros(self.temporal_max_candidates, dtype=np.int64)
+            candidate_duration_arr = np.ones(self.temporal_max_candidates, dtype=np.float32)
+            candidate_count = len(candidate_features)
+            candidate_features_arr[:candidate_count] = np.stack(candidate_features, axis=0)
+            candidate_mask_arr[:candidate_count] = True
+            candidate_start_arr[:candidate_count] = np.asarray(candidate_starts, dtype=np.int64)
+            candidate_duration_arr[:candidate_count] = np.asarray(candidate_durations, dtype=np.float32)
+            candidate_feature_rows.append(candidate_features_arr)
+            candidate_mask_rows.append(candidate_mask_arr)
+            candidate_start_rows.append(candidate_start_arr)
+            candidate_duration_rows.append(candidate_duration_arr)
+            numeric_rows.append(numeric)
             task_ids.append(int(slot['task_idx']))
-            anchor_starts.append(anchor)
-            anchor_durations.append(anchor_duration)
+            slot_rows.append({
+                'robot_id': series.robot_id,
+                'task_idx': int(slot['task_idx']),
+                'task_type': slot['task_type'],
+                'anchor_start_bin': anchor,
+            })
+
+        if not slot_rows:
+            return []
 
         batch = {
-            'history': torch.tensor(history_batch, dtype=torch.float32, device=self.device),
+            'history': torch.tensor(history_batch[:len(slot_rows)], dtype=torch.float32, device=self.device),
             'task_id': torch.tensor(task_ids, dtype=torch.long, device=self.device),
-            'database_id': torch.tensor([db_idx] * len(planned_slots), dtype=torch.long, device=self.device),
-            'robot_id': torch.tensor([robot_idx] * len(planned_slots), dtype=torch.long, device=self.device),
+            'database_id': torch.tensor([db_idx] * len(slot_rows), dtype=torch.long, device=self.device),
+            'robot_id': torch.tensor([robot_idx] * len(slot_rows), dtype=torch.long, device=self.device),
             'numeric_features': torch.tensor(np.stack(numeric_rows), dtype=torch.float32, device=self.device),
+            'candidate_features': torch.tensor(np.stack(candidate_feature_rows), dtype=torch.float32, device=self.device),
+            'candidate_mask': torch.tensor(np.stack(candidate_mask_rows), dtype=torch.bool, device=self.device),
         }
         self.temporal_model.eval()
         scheduled_events = []
         with torch.no_grad():
             outputs = self.temporal_model(**batch)
-            day_probs_all = outputs['day_offset_logits'].softmax(dim=-1).cpu().numpy()
-            local_probs_all = outputs['local_offset_logits'].softmax(dim=-1).cpu().numpy()
-            duration_delta_all = outputs['duration_delta'].cpu().numpy()
-            for idx, slot in enumerate(planned_slots):
-                anchor = anchor_starts[idx]
-                anchor_duration = anchor_durations[idx]
-                day_probs = day_probs_all[idx]
-                local_probs = local_probs_all[idx]
-                duration_delta = float(duration_delta_all[idx])
-                day_top = np.argsort(day_probs)[::-1][: self.topk_day]
-                local_top = np.argsort(local_probs)[::-1][: self.topk_local]
-                duration_med = task_duration_median(series, None, int(slot['task_idx']))
-                candidates = []
-                for day_idx in day_top:
-                    for local_idx in local_top:
-                        day_offset = index_to_day_offset(int(day_idx), self.day_offset_radius)
-                        local_offset = index_to_local_offset(int(local_idx), self.local_offset_radius)
-                        start_bin = int(np.clip(anchor + day_offset * self.bins_per_day + local_offset, 0, 7 * self.bins_per_day - 1))
-                        raw_duration = max(1.0, anchor_duration + duration_delta)
-                        duration_bins = max(1, int(round((1.0 - self.duration_blend_alpha) * raw_duration + self.duration_blend_alpha * duration_med)))
-                        distance = abs(start_bin - anchor)
-                        score = float(np.log(day_probs[day_idx] + 1e-9) + np.log(local_probs[local_idx] + 1e-9))
-                        score += float(self.config['scheduler']['template_bonus']) * (1.0 if start_bin == anchor else 0.0)
-                        score -= float(self.config['scheduler']['movement_penalty']) * distance
-                        score -= float(self.config['scheduler']['duration_penalty']) * abs(duration_bins - anchor_duration)
-                        candidates.append({'start_bin': start_bin, 'duration_bins': duration_bins, 'score': score})
-                anchor_duration_pred = max(1, int(round((1.0 - self.duration_blend_alpha) * max(1.0, anchor_duration + duration_delta) + self.duration_blend_alpha * duration_med)))
-                anchor_score = float(np.log(day_probs[self.day_offset_radius] + 1e-9) + np.log(local_probs[self.local_offset_radius] + 1e-9))
-                anchor_score += float(self.config['scheduler']['template_bonus'])
-                anchor_score -= float(self.config['scheduler']['duration_penalty']) * abs(anchor_duration_pred - anchor_duration)
-                candidates.append({'start_bin': anchor, 'duration_bins': anchor_duration_pred, 'score': anchor_score})
-
-                empirical_slot_bank = empirical_bank.get(int(slot['task_idx']), {'slot': {}, 'task': {}})
-                empirical_candidates: dict[tuple[int, int], float] = {}
-                for neighbor_slot in range(int(slot['slot_id']) - self.empirical_slot_neighbor_radius, int(slot['slot_id']) + self.empirical_slot_neighbor_radius + 1):
-                    for key, support_score in empirical_slot_bank.get('slot', {}).get(int(neighbor_slot), {}).items():
-                        empirical_candidates[key] = max(empirical_candidates.get(key, 0.0), float(support_score))
-                if not empirical_candidates:
-                    empirical_candidates = dict(empirical_slot_bank.get('task', {}))
-                for (start_bin, duration_bins), support_score in sorted(
-                    empirical_candidates.items(),
-                    key=lambda item: (-item[1], item[0][0], item[0][1]),
-                )[: self.empirical_candidate_limit]:
-                    score = self._score_empirical_candidate(
-                        anchor=anchor,
-                        anchor_duration=anchor_duration,
-                        start_bin=int(start_bin),
-                        duration_bins=int(duration_bins),
-                        support_score=float(support_score),
-                        day_probs=day_probs,
-                        local_probs=local_probs,
-                    )
-                    candidates.append({'start_bin': int(start_bin), 'duration_bins': int(duration_bins), 'score': score})
-                dedup = {}
-                for cand in candidates:
-                    key = (cand['start_bin'], cand['duration_bins'])
-                    dedup[key] = max(dedup.get(key, -1e18), cand['score'])
-                final_candidates = [{'start_bin': k[0], 'duration_bins': k[1], 'score': v} for k, v in dedup.items()]
-                final_candidates.sort(key=lambda x: x['score'], reverse=True)
+            logits = outputs['candidate_logits'].cpu().numpy()
+            for idx, slot_row in enumerate(slot_rows):
+                valid_idx = np.flatnonzero(candidate_mask_rows[idx])
+                if valid_idx.size == 0:
+                    continue
+                ordered = valid_idx[np.argsort(logits[idx, valid_idx])[::-1]]
+                final_candidates = [{
+                    'start_bin': int(candidate_start_rows[idx][cand_idx]),
+                    'duration_bins': int(round(float(candidate_duration_rows[idx][cand_idx]))),
+                    'score': float(logits[idx, cand_idx]),
+                } for cand_idx in ordered[:max(1, min(self.temporal_solver_candidates, len(ordered)))]]
                 scheduled_events.append({
-                    'robot_id': series.robot_id,
-                    'task_idx': slot['task_idx'],
-                    'task_type': slot['task_type'],
-                    'anchor_start_bin': anchor,
-                    'candidates': final_candidates[: max(5, self.topk_day * self.topk_local)],
+                    'robot_id': slot_row['robot_id'],
+                    'task_idx': slot_row['task_idx'],
+                    'task_type': slot_row['task_type'],
+                    'anchor_start_bin': slot_row['anchor_start_bin'],
+                    'candidates': final_candidates,
                 })
         return scheduled_events
 
@@ -356,15 +322,11 @@ class HybridWeekPredictor:
             'occurrence_debug': occ_debug,
             'num_predicted_events': len(payload),
             'temporal_decoder': {
-                'mode': 'relative_day_and_local_offsets_plus_empirical_bank',
-                'day_offset_radius': self.day_offset_radius,
-                'local_offset_radius': self.local_offset_radius,
-                'topk_day': self.topk_day,
-                'topk_local': self.topk_local,
-                'duration_blend_alpha': self.duration_blend_alpha,
-                'empirical_candidate_topk_templates': max(self.topk_templates, self.temporal_candidate_topk_templates),
-                'empirical_slot_neighbor_radius': self.empirical_slot_neighbor_radius,
-                'empirical_candidate_limit': self.empirical_candidate_limit,
+                'mode': 'historical_candidate_ranker',
+                'candidate_topk_templates': self.temporal_candidate_topk_templates,
+                'candidate_neighbor_radius': self.temporal_candidate_neighbor_radius,
+                'max_candidates': self.temporal_max_candidates,
+                'solver_candidates': self.temporal_solver_candidates,
             },
         }
         return payload, explanation

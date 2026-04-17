@@ -12,15 +12,22 @@ from hybrid_schedule.data.features import (
     SeriesBundle,
     SlotPrototype,
     assign_events_to_prototypes,
+    build_temporal_candidate_features,
     build_future_history_tensor,
     build_history_tensor,
     build_occurrence_numeric_features,
     build_temporal_numeric_features,
+    build_temporal_slot_context,
     per_task_recent_stats,
     task_slot_prototypes,
 )
-from hybrid_schedule.retrieval.template_retriever import TemplateWeek, build_template_week, propose_extra_slots
-from hybrid_schedule.utils import day_offset_to_index, local_offset_to_index
+from hybrid_schedule.retrieval.template_retriever import (
+    TemplateWeek,
+    build_empirical_candidate_bank,
+    build_template_week,
+    gather_empirical_candidates,
+    propose_extra_slots,
+)
 
 
 @dataclass
@@ -114,22 +121,35 @@ class TemporalDataset(Dataset):
         indices: list[tuple[str, str, int]],
         window_weeks: int,
         topk_templates: int,
-        bins_per_day: int,
-        day_offset_radius: int,
-        local_offset_radius: int,
+        candidate_topk_templates: int,
+        candidate_neighbor_radius: int,
+        max_candidates: int,
+        start_temperature_bins: float,
+        duration_temperature_bins: float,
+        duration_cost_weight: float,
         max_slot_prototypes: int = 32,
         count_lookup: dict[tuple[str, str, int, int], int] | None = None,
         bin_minutes: int = 5,
     ):
         self.samples: list[dict[str, Any]] = []
-        self.bins_per_day = int(bins_per_day)
-        self.day_offset_radius = int(day_offset_radius)
-        self.local_offset_radius = int(local_offset_radius)
+        self.candidate_topk_templates = int(candidate_topk_templates)
+        self.candidate_neighbor_radius = int(candidate_neighbor_radius)
+        self.max_candidates = max(1, int(max_candidates))
+        self.start_temperature_bins = float(max(1e-3, start_temperature_bins))
+        self.duration_temperature_bins = float(max(1e-3, duration_temperature_bins))
+        self.duration_cost_weight = float(max(0.0, duration_cost_weight))
         self.max_slot_prototypes = int(max_slot_prototypes)
         self.bin_minutes = int(bin_minutes)
         for database_id, robot_id, target_week_idx in indices:
             series = context.series[(database_id, robot_id)]
             template = build_template_week(series, target_week_idx, topk=topk_templates, max_slot_prototypes=self.max_slot_prototypes)
+            candidate_template = build_template_week(
+                series,
+                target_week_idx,
+                topk=self.candidate_topk_templates,
+                max_slot_prototypes=self.max_slot_prototypes,
+            )
+            candidate_bank = build_empirical_candidate_bank(series, candidate_template)
             history = build_history_tensor(series, target_week_idx, window_weeks, bin_minutes=self.bin_minutes)
             db_idx = context.database_to_idx[database_id]
             robot_key = f'{database_id}::{robot_id}'
@@ -175,8 +195,14 @@ class TemporalDataset(Dataset):
                     anchor_start = int(proto.center_bin)
                     anchor_duration = int(proto.duration_bins)
                     slot_support = float(proto.support)
-                    day_offset = int(round((int(target_evt.start_bin) - anchor_start) / self.bins_per_day))
-                    local_offset = int((int(target_evt.start_bin) - anchor_start) - day_offset * self.bins_per_day)
+                    slot_context = build_temporal_slot_context(
+                        series,
+                        target_week_idx,
+                        task_idx,
+                        slot_id,
+                        max_slots=self.max_slot_prototypes,
+                        bin_minutes=self.bin_minutes,
+                    )
                     numeric = build_temporal_numeric_features(
                         series,
                         target_week_idx,
@@ -189,24 +215,79 @@ class TemporalDataset(Dataset):
                         slot_support,
                         max_slots=self.max_slot_prototypes,
                         bin_minutes=self.bin_minutes,
+                        slot_context=slot_context,
                     )
+                    empirical_candidates = gather_empirical_candidates(
+                        candidate_bank,
+                        task_idx=task_idx,
+                        slot_id=slot_id,
+                        neighbor_radius=self.candidate_neighbor_radius,
+                        limit=self.max_candidates,
+                        fallback_anchor=(anchor_start, anchor_duration),
+                    )
+                    candidate_features = []
+                    candidate_starts = []
+                    candidate_durations = []
+                    candidate_costs = []
+                    candidate_target_scores = []
+                    for cand_start, cand_duration, cand_support in empirical_candidates[:self.max_candidates]:
+                        candidate_features.append(build_temporal_candidate_features(
+                            series,
+                            target_week_idx,
+                            task_idx,
+                            slot_id,
+                            anchor_start,
+                            anchor_duration,
+                            int(cand_start),
+                            int(cand_duration),
+                            float(cand_support),
+                            max_slots=self.max_slot_prototypes,
+                            bin_minutes=self.bin_minutes,
+                            slot_context=slot_context,
+                        ))
+                        candidate_starts.append(int(cand_start))
+                        candidate_durations.append(max(1, int(cand_duration)))
+                        start_gap = abs(int(cand_start) - int(target_evt.start_bin)) / self.start_temperature_bins
+                        duration_gap = abs(int(cand_duration) - int(target_evt.duration_bins)) / self.duration_temperature_bins
+                        cost = float(start_gap + self.duration_cost_weight * duration_gap)
+                        candidate_costs.append(cost)
+                        candidate_target_scores.append(-cost)
+                    if not candidate_features:
+                        continue
+                    candidate_count = len(candidate_features)
+                    candidate_features_arr = np.zeros((self.max_candidates, len(candidate_features[0])), dtype=np.float32)
+                    candidate_starts_arr = np.zeros(self.max_candidates, dtype=np.int64)
+                    candidate_durations_arr = np.ones(self.max_candidates, dtype=np.float32)
+                    candidate_cost_arr = np.full(self.max_candidates, 16.0, dtype=np.float32)
+                    candidate_mask_arr = np.zeros(self.max_candidates, dtype=np.bool_)
+                    target_probs_arr = np.zeros(self.max_candidates, dtype=np.float32)
+                    candidate_features_arr[:candidate_count] = np.stack(candidate_features, axis=0)
+                    candidate_starts_arr[:candidate_count] = np.asarray(candidate_starts, dtype=np.int64)
+                    candidate_durations_arr[:candidate_count] = np.asarray(candidate_durations, dtype=np.float32)
+                    candidate_cost_arr[:candidate_count] = np.asarray(candidate_costs, dtype=np.float32)
+                    candidate_mask_arr[:candidate_count] = True
+                    target_logits = np.asarray(candidate_target_scores, dtype=np.float32)
+                    target_logits = target_logits - float(target_logits.max())
+                    target_weights = np.exp(target_logits)
+                    target_probs_arr[:candidate_count] = target_weights / max(float(target_weights.sum()), 1e-8)
                     self.samples.append({
                         'history': history.astype(np.float32),
                         'task_id': task_idx,
                         'database_id': db_idx,
                         'robot_id': robot_idx,
                         'numeric_features': numeric,
+                        'candidate_features': candidate_features_arr,
+                        'candidate_starts': candidate_starts_arr,
+                        'candidate_durations': candidate_durations_arr,
+                        'candidate_costs': candidate_cost_arr,
+                        'candidate_mask': candidate_mask_arr,
+                        'candidate_target_probs': target_probs_arr,
                         'slot_id': slot_id,
                         'baseline_pred_count': predicted_count,
                         'anchor_start': anchor_start,
                         'anchor_duration': anchor_duration,
                         'target_start': int(target_evt.start_bin),
                         'target_duration': int(target_evt.duration_bins),
-                        'day_offset_target': day_offset_to_index(day_offset, self.day_offset_radius),
-                        'local_offset_target': local_offset_to_index(local_offset, self.local_offset_radius),
-                        'duration_delta': float(target_evt.duration_bins - anchor_duration),
-                        'day_offset_radius': self.day_offset_radius,
-                        'local_offset_radius': self.local_offset_radius,
                     })
 
     def __len__(self) -> int:
@@ -220,17 +301,18 @@ class TemporalDataset(Dataset):
             'database_id': torch.tensor(s['database_id'], dtype=torch.long),
             'robot_id': torch.tensor(s['robot_id'], dtype=torch.long),
             'numeric_features': torch.tensor(s['numeric_features'], dtype=torch.float32),
+            'candidate_features': torch.tensor(s['candidate_features'], dtype=torch.float32),
+            'candidate_starts': torch.tensor(s['candidate_starts'], dtype=torch.long),
+            'candidate_durations': torch.tensor(s['candidate_durations'], dtype=torch.float32),
+            'candidate_costs': torch.tensor(s['candidate_costs'], dtype=torch.float32),
+            'candidate_mask': torch.tensor(s['candidate_mask'], dtype=torch.bool),
+            'candidate_target_probs': torch.tensor(s['candidate_target_probs'], dtype=torch.float32),
             'slot_id': torch.tensor(s['slot_id'], dtype=torch.long),
             'baseline_pred_count': torch.tensor(s['baseline_pred_count'], dtype=torch.long),
             'anchor_start': torch.tensor(s['anchor_start'], dtype=torch.long),
             'anchor_duration': torch.tensor(s['anchor_duration'], dtype=torch.float32),
             'target_start': torch.tensor(s['target_start'], dtype=torch.long),
             'target_duration': torch.tensor(s['target_duration'], dtype=torch.float32),
-            'day_offset_target': torch.tensor(s['day_offset_target'], dtype=torch.long),
-            'local_offset_target': torch.tensor(s['local_offset_target'], dtype=torch.long),
-            'duration_delta': torch.tensor(s['duration_delta'], dtype=torch.float32),
-            'day_offset_radius': torch.tensor(s['day_offset_radius'], dtype=torch.long),
-            'local_offset_radius': torch.tensor(s['local_offset_radius'], dtype=torch.long),
         }
 
 

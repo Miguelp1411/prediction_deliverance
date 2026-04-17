@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from hybrid_schedule.data.features import EventItem, SeriesBundle, SlotPrototype, task_prototype_from_history, task_slot_prototypes
+from hybrid_schedule.data.features import EventItem, SeriesBundle, SlotPrototype, assign_events_to_prototypes, task_prototype_from_history, task_slot_prototypes
 
 
 @dataclass
@@ -23,6 +23,9 @@ class TemplateWeek:
     events: list[EventItem]
     support_by_slot: dict[tuple[int, int], float]
     slot_prototypes_by_task: dict[int, list[SlotPrototype]]
+
+
+EmpiricalCandidateBank = dict[int, dict[str, dict]]
 
 
 def _week_signature(series: SeriesBundle, week_idx: int) -> np.ndarray:
@@ -101,6 +104,54 @@ def build_template_week(series: SeriesBundle, target_week_idx: int | None, topk:
         support_by_slot=support_by_slot,
         slot_prototypes_by_task=slot_prototypes_by_task,
     )
+
+
+def build_empirical_candidate_bank(series: SeriesBundle, template: TemplateWeek) -> EmpiricalCandidateBank:
+    raw_weights = np.exp(np.asarray(template.week_scores, dtype=np.float64))
+    total = float(raw_weights.sum())
+    week_weights = raw_weights / total if total > 0 else np.ones_like(raw_weights) / max(len(raw_weights), 1)
+    bank: EmpiricalCandidateBank = {}
+    for task_idx in range(series.counts.shape[1]):
+        prototypes = template.slot_prototypes_by_task.get(task_idx, [])
+        slot_bank: dict[int, dict[tuple[int, int], float]] = {}
+        task_bank: dict[tuple[int, int], float] = {}
+        if not prototypes:
+            bank[task_idx] = {'slot': slot_bank, 'task': task_bank}
+            continue
+        for weight, week_idx in zip(week_weights.tolist(), template.source_weeks):
+            task_events = [evt for evt in series.events[week_idx] if evt.task_idx == task_idx]
+            if not task_events:
+                continue
+            assignments = assign_events_to_prototypes(task_events, prototypes)
+            for slot_id, evt, _ in assignments:
+                key = (int(evt.start_bin), int(evt.duration_bins))
+                slot_bank.setdefault(int(slot_id), {})
+                slot_bank[int(slot_id)][key] = slot_bank[int(slot_id)].get(key, 0.0) + float(weight)
+                task_bank[key] = task_bank.get(key, 0.0) + float(weight)
+        bank[task_idx] = {'slot': slot_bank, 'task': task_bank}
+    return bank
+
+
+def gather_empirical_candidates(
+    candidate_bank: EmpiricalCandidateBank,
+    task_idx: int,
+    slot_id: int,
+    neighbor_radius: int = 1,
+    limit: int = 24,
+    fallback_anchor: tuple[int, int] | None = None,
+) -> list[tuple[int, int, float]]:
+    task_bank = candidate_bank.get(int(task_idx), {'slot': {}, 'task': {}})
+    candidates: dict[tuple[int, int], float] = {}
+    for neighbor_slot in range(int(slot_id) - int(neighbor_radius), int(slot_id) + int(neighbor_radius) + 1):
+        for key, support_score in task_bank.get('slot', {}).get(int(neighbor_slot), {}).items():
+            candidates[key] = max(candidates.get(key, 0.0), float(support_score))
+    if not candidates:
+        candidates = {tuple(key): float(score) for key, score in task_bank.get('task', {}).items()}
+    ordered = sorted(candidates.items(), key=lambda item: (-item[1], item[0][0], item[0][1]))
+    rows = [(int(start_bin), int(duration_bins), float(score)) for (start_bin, duration_bins), score in ordered[:max(1, int(limit))]]
+    if not rows and fallback_anchor is not None:
+        rows = [(int(fallback_anchor[0]), max(1, int(fallback_anchor[1])), 0.0)]
+    return rows
 
 
 def propose_extra_slots(

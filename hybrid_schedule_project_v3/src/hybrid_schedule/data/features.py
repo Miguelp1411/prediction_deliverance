@@ -422,11 +422,35 @@ def slot_recent_start_offsets(series: SeriesBundle, target_week_idx: int | None,
         return {'offset_mean_days': 0.0, 'offset_mean_local': 0.0, 'offset_std_local': 0.0, 'slot_support': float(anchor.support)}
     bins_per_day = int(24 * 60 / bin_minutes)
     offsets_arr = np.asarray(offsets, dtype=np.float32)
+    local_offsets = offsets_arr - np.round(offsets_arr / bins_per_day) * bins_per_day
     return {
         'offset_mean_days': float(np.mean(offsets_arr / bins_per_day)),
-        'offset_mean_local': float(np.mean(offsets_arr % bins_per_day) / bins_per_day),
-        'offset_std_local': float(np.std(offsets_arr) / bins_per_day),
+        'offset_mean_local': float(np.mean(local_offsets) / bins_per_day),
+        'offset_std_local': float(np.std(local_offsets) / bins_per_day),
         'slot_support': float(anchor.support),
+    }
+
+
+def build_temporal_slot_context(
+    series: SeriesBundle,
+    target_week_idx: int | None,
+    task_idx: int,
+    slot_id: int,
+    max_slots: int = 32,
+    bin_minutes: int = 5,
+) -> dict[str, Any]:
+    bins_per_day = int(24 * 60 / bin_minutes)
+    profile = task_temporal_profile(series, target_week_idx, task_idx, bin_minutes=bin_minutes)
+    slot_stats = slot_recent_start_offsets(series, target_week_idx, task_idx, slot_id, max_slots=max_slots, bin_minutes=bin_minutes)
+    duration_med = task_duration_median(series, target_week_idx, task_idx)
+    slot_scale = float(max(1, int(max_slots) - 1))
+    return {
+        'profile': profile,
+        'slot_stats': slot_stats,
+        'duration_med': float(duration_med),
+        'bins_per_day': bins_per_day,
+        'slot_scale': slot_scale,
+        'max_start_norm': float(max(1, 7 * bins_per_day - 1)),
     }
 
 
@@ -473,14 +497,23 @@ def build_temporal_numeric_features(
     slot_support: float,
     max_slots: int = 32,
     bin_minutes: int = 5,
+    slot_context: dict[str, Any] | None = None,
 ) -> np.ndarray:
-    bins_per_day = int(24 * 60 / bin_minutes)
-    profile = task_temporal_profile(series, target_week_idx, task_idx, bin_minutes=bin_minutes)
-    slot_stats = slot_recent_start_offsets(series, target_week_idx, task_idx, slot_id, max_slots=max_slots, bin_minutes=bin_minutes)
-    duration_med = task_duration_median(series, target_week_idx, task_idx)
-    slot_scale = float(max(1, int(max_slots) - 1))
+    slot_context = slot_context or build_temporal_slot_context(
+        series,
+        target_week_idx,
+        task_idx,
+        slot_id,
+        max_slots=max_slots,
+        bin_minutes=bin_minutes,
+    )
+    bins_per_day = int(slot_context['bins_per_day'])
+    profile = slot_context['profile']
+    slot_stats = slot_context['slot_stats']
+    duration_med = float(slot_context['duration_med'])
+    slot_scale = float(slot_context['slot_scale'])
     return np.asarray([
-        float(anchor_start) / max(1, 7 * bins_per_day - 1),
+        float(anchor_start) / float(slot_context['max_start_norm']),
         float(anchor_start // bins_per_day) / 6.0,
         float(anchor_start % bins_per_day) / max(1, bins_per_day - 1),
         float(anchor_duration) / 12.0,
@@ -498,4 +531,62 @@ def build_temporal_numeric_features(
         slot_stats['offset_mean_local'],
         slot_stats['offset_std_local'],
         float(duration_med) / 12.0,
+    ], dtype=np.float32)
+
+
+def build_temporal_candidate_features(
+    series: SeriesBundle,
+    target_week_idx: int | None,
+    task_idx: int,
+    slot_id: int,
+    anchor_start: int,
+    anchor_duration: int,
+    candidate_start: int,
+    candidate_duration: int,
+    support_score: float,
+    max_slots: int = 32,
+    bin_minutes: int = 5,
+    slot_context: dict[str, Any] | None = None,
+) -> np.ndarray:
+    slot_context = slot_context or build_temporal_slot_context(
+        series,
+        target_week_idx,
+        task_idx,
+        slot_id,
+        max_slots=max_slots,
+        bin_minutes=bin_minutes,
+    )
+    bins_per_day = int(slot_context['bins_per_day'])
+    max_start_norm = float(slot_context['max_start_norm'])
+    profile = slot_context['profile']
+    slot_stats = slot_context['slot_stats']
+    duration_med = float(slot_context['duration_med'])
+
+    candidate_start = int(candidate_start)
+    anchor_start = int(anchor_start)
+    candidate_duration = max(1, int(candidate_duration))
+    anchor_duration = max(1, int(anchor_duration))
+    diff = float(candidate_start - anchor_start)
+    day_gap = float((candidate_start // bins_per_day) - (anchor_start // bins_per_day))
+    local_gap = float((candidate_start % bins_per_day) - (anchor_start % bins_per_day))
+    angle = 2.0 * np.pi * float(candidate_start) / max_start_norm
+    return np.asarray([
+        float(candidate_start) / max_start_norm,
+        float(candidate_start // bins_per_day) / 6.0,
+        float(candidate_start % bins_per_day) / max(1, bins_per_day - 1),
+        float(candidate_duration) / 12.0,
+        float(np.log1p(max(0.0, float(support_score)))),
+        diff / max_start_norm,
+        abs(diff) / max_start_norm,
+        day_gap / 6.0,
+        local_gap / max(1, bins_per_day - 1),
+        float(candidate_duration - anchor_duration) / 12.0,
+        1.0 if candidate_start == anchor_start else 0.0,
+        float(candidate_start) / max_start_norm - profile['mean_start_norm'],
+        float(candidate_duration) / 12.0 - profile['duration_median_norm'],
+        day_gap - slot_stats['offset_mean_days'],
+        float(local_gap) / max(1, bins_per_day - 1) - slot_stats['offset_mean_local'],
+        np.sin(angle),
+        np.cos(angle),
+        float(candidate_duration - duration_med) / 12.0,
     ], dtype=np.float32)

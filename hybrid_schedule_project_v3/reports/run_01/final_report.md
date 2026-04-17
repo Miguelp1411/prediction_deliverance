@@ -18,20 +18,20 @@
 
 ## Temporal residual model
 
-- val start_exact_acc: **18.78%**
-- val start_tol_5m: **22.30%**
-- val start_tol_10m: **26.77%**
-- val start_mae_minutes: **267.11 min**
+- val start_exact_acc: **23.77%**
+- val start_tol_5m: **26.32%**
+- val start_tol_10m: **31.13%**
+- val start_mae_minutes: **234.44 min**
 - val duration_mae_minutes: **0.00 min**
 
 ## Weekly backtest
 
 - task_f1: **87.49%**
-- time_exact_accuracy: **19.14%**
-- time_close_accuracy_5m: **21.47%**
-- time_close_accuracy_10m: **23.61%**
-- start_mae_minutes: **619.92 min**
-- overlap_same_robot_count: **0**
+- time_exact_accuracy: **23.75%**
+- time_close_accuracy_5m: **26.76%**
+- time_close_accuracy_10m: **29.19%**
+- start_mae_minutes: **476.65 min**
+- overlap_same_robot_count: **2**
 
 ## Interpretación
 

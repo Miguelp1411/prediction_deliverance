@@ -31,13 +31,14 @@ models:
     task_embed_dim: 24
     database_embed_dim: 12
     robot_embed_dim: 12
-    day_offset_radius: 3
-    local_offset_radius: 72
-    topk_day: 3
-    topk_local: 6
-    day_label_smoothing: 0.05
-    local_label_smoothing: 0.03
-    duration_blend_alpha: 0.30
+    candidate_topk_templates: 20
+    candidate_neighbor_radius: 1
+    max_candidates: 32
+    solver_candidates: 24
+    start_temperature_bins: 2.0
+    duration_temperature_bins: 1.0
+    duration_cost_weight: 0.35
+    expected_cost_weight: 0.30
 
 training:
   batch_size_occurrence: 32
