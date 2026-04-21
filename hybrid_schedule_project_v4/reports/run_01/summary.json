@@ -1,8 +1,8 @@
 {
   "profile": {
-    "num_events": 32732,
+    "num_events": 19542,
     "num_databases": 1,
-    "num_robots": 1,
+    "num_robots": 2,
     "num_tasks": 4,
     "tasks": [
       "Assist",
@@ -11,68 +11,69 @@
       "Patroll"
     ],
     "date_min": "2026-01-05 09:00:00+01:00",
-    "date_max": "2036-01-05 00:25:00+01:00",
-    "num_weeks": 522,
+    "date_max": "2031-01-04 18:45:00+01:00",
+    "num_weeks": 261,
     "duration_minutes_min": 10.0,
     "duration_minutes_median": 25.0,
     "duration_minutes_max": 45.0,
-    "weekly_tasks_mean": 62.70498084291188,
-    "weekly_tasks_std": 16.668529028694717,
+    "weekly_tasks_mean": 37.4367816091954,
+    "weekly_tasks_std": 8.167208178450025,
     "overlap_same_robot_count": 0,
     "overlap_breakdown": {
-      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 0
+      "nexus_10y::centinela-0001-4aaa-8bbb-robot00000001": 0,
+      "nexus_10y::logista-00002-4ccc-8ddd-robot00000002": 0
     },
     "by_database": {
       "nexus_10y": {
-        "events": 32732,
-        "robots": 1,
-        "weeks": 522,
+        "events": 19542,
+        "robots": 2,
+        "weeks": 261,
         "tasks": [
           "Assist",
           "Clean",
           "Delivery",
           "Patroll"
         ],
-        "weekly_mean": 62.70498084291188,
+        "weekly_mean": 37.4367816091954,
         "duration_median": 25.0
       }
     }
   },
   "occurrence": {
-    "change_acc": 94.47115384615384,
-    "close_acc_1": 62.5,
-    "close_acc_2": 81.73076923076923,
-    "count_exact_acc": 27.884615384615383,
-    "count_mae": 1.4254807692307692,
-    "expected_count_mae": 1.344568784420307,
-    "selection_score": 42.42460947770339
+    "change_acc": 83.89423076923077,
+    "close_acc_1": 87.25961538461539,
+    "close_acc_2": 94.71153846153847,
+    "count_exact_acc": 55.28846153846154,
+    "count_mae": 0.6850961538461539,
+    "expected_count_mae": 0.6459415715474349,
+    "selection_score": 86.15421448304103
   },
   "temporal": {
-    "candidate_oracle_10m": 87.84975853279559,
-    "candidate_oracle_5m": 84.67153476102509,
+    "candidate_oracle_10m": 95.72598065859006,
+    "candidate_oracle_5m": 95.36366183080791,
     "duration_mae_minutes": 0.0,
-    "start_exact_acc": 36.98296954814535,
-    "start_mae_minutes": 111.26444934710969,
-    "start_tol_10m": 47.97749534575608,
-    "start_tol_5m": 40.75425916562115,
-    "selection_score": 55.84185089073041
+    "start_exact_acc": 73.85042247212964,
+    "start_mae_minutes": 75.41728371087416,
+    "start_tol_10m": 81.00957428967511,
+    "start_tol_5m": 75.23931121384656,
+    "selection_score": 109.71071566181418
   },
   "backtest": {
-    "task_precision": 93.07154336148767,
-    "task_recall": 85.91747549306865,
-    "task_f1": 88.65567760329053,
-    "time_exact_accuracy": 31.448499834882067,
-    "time_close_accuracy_5m": 33.417280233261444,
-    "time_close_accuracy_10m": 36.71454194306538,
+    "task_precision": 92.52175606268115,
+    "task_recall": 92.37167282213538,
+    "task_f1": 92.27644134630471,
+    "time_exact_accuracy": 61.88159407795016,
+    "time_close_accuracy_5m": 64.43706951490547,
+    "time_close_accuracy_10m": 67.06397307946102,
     "duration_close_accuracy": 100.0,
-    "start_mae_minutes": 499.56021020700973,
-    "overlap_same_robot_count": 0.75,
-    "predicted_tasks": 59.25,
-    "true_tasks": 62.333333333333336,
-    "matched_tasks": 55.166666666666664
+    "start_mae_minutes": 407.90685709648443,
+    "overlap_same_robot_count": 1.0833333333333333,
+    "predicted_tasks": 41.208333333333336,
+    "true_tasks": 41.125,
+    "matched_tasks": 38.166666666666664
   },
   "artifacts": {
-    "occurrence_checkpoint": "/home/miguel/Descargas/hybrid_schedule_project_v3/reports/run_01/occurrence_model.pt",
-    "temporal_checkpoint": "/home/miguel/Descargas/hybrid_schedule_project_v3/reports/run_01/temporal_model.pt"
+    "occurrence_checkpoint": "/home/miguel/Escritorio/prediction_deliverance/hybrid_schedule_project_v4/reports/run_01/occurrence_model.pt",
+    "temporal_checkpoint": "/home/miguel/Escritorio/prediction_deliverance/hybrid_schedule_project_v4/reports/run_01/temporal_model.pt"
   }
 }
