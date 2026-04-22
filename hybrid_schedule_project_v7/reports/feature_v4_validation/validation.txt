@@ -1,0 +1,22 @@
+Validación funcional parcial v4
+==============================
+
+Fecha: 2026-04-17
+Esquema de features: v4_positional_density_ordinal
+
+Comprobaciones realizadas:
+- Compilación de src/ y scripts/: OK
+- OccurrenceDataset construido con nuevas features: OK
+- Forward pass OccurrenceResidualNet: OK
+- TemporalDataset construido con nuevas features posicionales/densidad/ordinales: OK
+- Forward pass TemporalRankingNet: OK
+- Predicción end-to-end con modelos inicializados y solver: OK
+
+Dimensiones observadas en la validación reducida:
+- history_dim: 65
+- occurrence_numeric_dim: 45
+- temporal_numeric_dim: 56
+- temporal_candidate_dim: 28
+
+Nota:
+No se completó un reentrenamiento full del dataset grande dentro de esta sesión. Los checkpoints previos quedan invalidados y el proyecto exige reentrenar con esta versión antes de usar inferencia real.

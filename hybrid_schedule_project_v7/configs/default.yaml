@@ -1,0 +1,120 @@
+seed: 42
+calendar:
+  timezone_default: Europe/Madrid
+  bin_minutes: 5
+  window_weeks: 16
+  min_history_weeks: 24
+  topk_templates: 4
+  max_slot_prototypes: 48
+  temporal_candidate_topk_templates: 24
+splits:
+  train_ratio: 0.8
+  backtest_weeks: 24
+models:
+  occurrence:
+    hidden_size: 128
+    num_layers: 1
+    dropout: 0.35
+    task_embed_dim: 24
+    database_embed_dim: 12
+    robot_embed_dim: 12
+    max_delta: 8
+    change_loss_weight: 0.2
+    expected_count_mae_weight: 0.2
+    delta_reg_weight: 0.05
+    label_smoothing: 0.05
+    use_lag52: false
+  temporal:
+    architecture: direct_day_time
+    hidden_size: 192
+    num_layers: 2
+    num_heads: 4
+    dropout: 0.25
+    task_embed_dim: 32
+    database_embed_dim: 16
+    robot_embed_dim: 16
+    slot_embed_dim: 24
+    day_embed_dim: 8
+    time_embed_dim: 16
+    solver_candidates: 32
+    inference_topk_days: 4
+    inference_topk_times: 18
+    day_loss_weight: 0.8
+    time_loss_weight: 1.0
+    duration_loss_weight: 0.2
+    day_label_smoothing: 0.02
+    time_label_smoothing: 0.01
+    candidate_topk_templates: 24
+    candidate_neighbor_radius: 2
+    max_candidates: 64
+    candidate_source_quotas:
+      slot: 14
+      task: 8
+      seasonal: 10
+      week_type: 4
+      density: 8
+      regime: 8
+      precedence: 6
+      prototype: 10
+    regime_lookback_weeks: 8
+    prototype_start_offsets_bins:
+    - -12
+    - -6
+    - -3
+    - -2
+    - -1
+    - 0
+    - 1
+    - 2
+    - 3
+    - 6
+    - 12
+    prototype_duration_offsets_bins:
+    - -2
+    - -1
+    - 0
+    - 1
+    - 2
+    start_temperature_bins: 2.0
+    duration_temperature_bins: 1.0
+    duration_cost_weight: 0.35
+    expected_cost_weight: 0.3
+    label_smoothing: 0.05
+    confidence_penalty_weight: 0.02
+    anchor_deviation_weight: 0.03
+    duration_deviation_weight: 0.01
+training:
+  batch_size_occurrence: 32
+  batch_size_temporal: 48
+  lr_occurrence: 0.0003
+  lr_temporal: 0.0003
+  weight_decay: 0.0005
+  epochs_occurrence: 200
+  epochs_temporal: 180
+  patience: 24
+  amp: false
+  num_workers: 0
+  grad_clip_norm: 1.0
+  use_lr_scheduler: true
+  lr_scheduler_factor: 0.5
+  lr_scheduler_patience: 6
+  lr_scheduler_min_lr: 1.0e-05
+  lr_scheduler_threshold: 0.001
+scheduler:
+  backend: cp_sat
+  prohibit_overlap: true
+  min_gap_bins: 0
+  max_exact_events: 128
+  max_exact_variables: 2500
+  max_solver_seconds: 20
+  num_search_workers: 8
+  objective_scale: 1000
+  empirical_model_weight: 1.0
+  empirical_support_weight: 0.8
+  movement_penalty: 0.35
+  day_penalty: 0.9
+  duration_penalty: 0.2
+reporting:
+  save_plots: true
+  save_epoch_jsonl: true
+  save_csv: true

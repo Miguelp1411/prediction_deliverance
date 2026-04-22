@@ -1,0 +1,41 @@
+{
+  "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "template_primary_week": "2031-11-24 00:00:00+01:00",
+    "template_source_weeks": [
+      "2031-11-24 00:00:00+01:00",
+      "2030-11-25 00:00:00+01:00",
+      "2035-12-24 00:00:00+01:00",
+      "2027-12-13 00:00:00+01:00",
+      "2029-12-24 00:00:00+01:00"
+    ],
+    "occurrence_debug": {
+      "Assist": {
+        "template_count": 16,
+        "pred_delta": 1,
+        "pred_count": 17,
+        "changed_prob": 0.7886908054351807
+      },
+      "Clean": {
+        "template_count": 13,
+        "pred_delta": -2,
+        "pred_count": 11,
+        "changed_prob": 0.7762496471405029
+      },
+      "Delivery": {
+        "template_count": 22,
+        "pred_delta": -2,
+        "pred_count": 20,
+        "changed_prob": 0.8289003372192383
+      },
+      "Patroll": {
+        "template_count": 25,
+        "pred_delta": -2,
+        "pred_count": 23,
+        "changed_prob": 0.8703332543373108
+      }
+    },
+    "num_predicted_events": 71
+  }
+}

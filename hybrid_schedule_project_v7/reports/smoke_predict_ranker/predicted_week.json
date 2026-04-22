@@ -1,0 +1,641 @@
+[
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-07T10:00:00+01:00",
+    "end_time": "2036-01-07T10:25:00+01:00",
+    "start_bin": 120,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-07T10:25:00+01:00",
+    "end_time": "2036-01-07T11:10:00+01:00",
+    "start_bin": 125,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-07T11:10:00+01:00",
+    "end_time": "2036-01-07T11:35:00+01:00",
+    "start_bin": 134,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-07T14:10:00+01:00",
+    "end_time": "2036-01-07T14:25:00+01:00",
+    "start_bin": 170,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-07T18:40:00+01:00",
+    "end_time": "2036-01-07T19:25:00+01:00",
+    "start_bin": 224,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-07T19:25:00+01:00",
+    "end_time": "2036-01-07T19:50:00+01:00",
+    "start_bin": 233,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-07T19:50:00+01:00",
+    "end_time": "2036-01-07T20:35:00+01:00",
+    "start_bin": 238,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-07T20:35:00+01:00",
+    "end_time": "2036-01-07T20:45:00+01:00",
+    "start_bin": 247,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-07T20:45:00+01:00",
+    "end_time": "2036-01-07T20:55:00+01:00",
+    "start_bin": 249,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-08T01:00:00+01:00",
+    "end_time": "2036-01-08T01:25:00+01:00",
+    "start_bin": 300,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-08T01:25:00+01:00",
+    "end_time": "2036-01-08T02:10:00+01:00",
+    "start_bin": 305,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-08T10:00:00+01:00",
+    "end_time": "2036-01-08T10:25:00+01:00",
+    "start_bin": 408,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-08T10:40:00+01:00",
+    "end_time": "2036-01-08T11:25:00+01:00",
+    "start_bin": 416,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-08T11:35:00+01:00",
+    "end_time": "2036-01-08T12:00:00+01:00",
+    "start_bin": 427,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-08T14:00:00+01:00",
+    "end_time": "2036-01-08T14:10:00+01:00",
+    "start_bin": 456,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-08T14:10:00+01:00",
+    "end_time": "2036-01-08T14:25:00+01:00",
+    "start_bin": 458,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-08T18:10:00+01:00",
+    "end_time": "2036-01-08T18:25:00+01:00",
+    "start_bin": 506,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-08T18:25:00+01:00",
+    "end_time": "2036-01-08T18:50:00+01:00",
+    "start_bin": 509,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-08T19:00:00+01:00",
+    "end_time": "2036-01-08T19:15:00+01:00",
+    "start_bin": 516,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-08T19:15:00+01:00",
+    "end_time": "2036-01-08T20:00:00+01:00",
+    "start_bin": 519,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-08T20:00:00+01:00",
+    "end_time": "2036-01-08T20:25:00+01:00",
+    "start_bin": 528,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-08T20:30:00+01:00",
+    "end_time": "2036-01-08T20:40:00+01:00",
+    "start_bin": 534,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-08T20:50:00+01:00",
+    "end_time": "2036-01-08T21:00:00+01:00",
+    "start_bin": 538,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-08T21:05:00+01:00",
+    "end_time": "2036-01-08T21:20:00+01:00",
+    "start_bin": 541,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-09T00:25:00+01:00",
+    "end_time": "2036-01-09T01:10:00+01:00",
+    "start_bin": 581,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-09T01:25:00+01:00",
+    "end_time": "2036-01-09T02:10:00+01:00",
+    "start_bin": 593,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-09T09:25:00+01:00",
+    "end_time": "2036-01-09T09:50:00+01:00",
+    "start_bin": 689,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-09T10:25:00+01:00",
+    "end_time": "2036-01-09T10:40:00+01:00",
+    "start_bin": 701,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-09T11:05:00+01:00",
+    "end_time": "2036-01-09T11:15:00+01:00",
+    "start_bin": 709,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-09T11:25:00+01:00",
+    "end_time": "2036-01-09T11:35:00+01:00",
+    "start_bin": 713,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-09T11:35:00+01:00",
+    "end_time": "2036-01-09T11:45:00+01:00",
+    "start_bin": 715,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-09T14:00:00+01:00",
+    "end_time": "2036-01-09T14:10:00+01:00",
+    "start_bin": 744,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-09T14:25:00+01:00",
+    "end_time": "2036-01-09T14:50:00+01:00",
+    "start_bin": 749,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-09T15:00:00+01:00",
+    "end_time": "2036-01-09T15:10:00+01:00",
+    "start_bin": 756,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-09T15:10:00+01:00",
+    "end_time": "2036-01-09T15:25:00+01:00",
+    "start_bin": 758,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-09T18:00:00+01:00",
+    "end_time": "2036-01-09T18:10:00+01:00",
+    "start_bin": 792,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Patroll",
+    "start_time": "2036-01-09T18:45:00+01:00",
+    "end_time": "2036-01-09T19:10:00+01:00",
+    "start_bin": 801,
+    "duration_bins": 5
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-09T19:10:00+01:00",
+    "end_time": "2036-01-09T19:25:00+01:00",
+    "start_bin": 806,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-09T19:50:00+01:00",
+    "end_time": "2036-01-09T20:35:00+01:00",
+    "start_bin": 814,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Delivery",
+    "start_time": "2036-01-09T20:45:00+01:00",
+    "end_time": "2036-01-09T20:55:00+01:00",
+    "start_bin": 825,
+    "duration_bins": 2
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-10T00:25:00+01:00",
+    "end_time": "2036-01-10T01:10:00+01:00",
+    "start_bin": 869,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-10T01:25:00+01:00",
+    "end_time": "2036-01-10T02:10:00+01:00",
+    "start_bin": 881,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-10T09:10:00+01:00",
+    "end_time": "2036-01-10T09:25:00+01:00",
+    "start_bin": 974,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-10T09:40:00+01:00",
+    "end_time": "2036-01-10T10:25:00+01:00",
+    "start_bin": 980,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-10T10:25:00+01:00",
+    "end_time": "2036-01-10T10:40:00+01:00",
+    "start_bin": 989,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-10T11:10:00+01:00",
+    "end_time": "2036-01-10T11:55:00+01:00",
+    "start_bin": 998,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-10T12:50:00+01:00",
+    "end_time": "2036-01-10T13:05:00+01:00",
+    "start_bin": 1018,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-10T13:05:00+01:00",
+    "end_time": "2036-01-10T13:20:00+01:00",
+    "start_bin": 1021,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-10T13:20:00+01:00",
+    "end_time": "2036-01-10T14:05:00+01:00",
+    "start_bin": 1024,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-10T13:45:00+01:00",
+    "end_time": "2036-01-10T14:30:00+01:00",
+    "start_bin": 1029,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-10T14:50:00+01:00",
+    "end_time": "2036-01-10T15:05:00+01:00",
+    "start_bin": 1042,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-10T15:05:00+01:00",
+    "end_time": "2036-01-10T15:50:00+01:00",
+    "start_bin": 1045,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T00:25:00+01:00",
+    "end_time": "2036-01-11T01:10:00+01:00",
+    "start_bin": 1157,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T01:25:00+01:00",
+    "end_time": "2036-01-11T02:10:00+01:00",
+    "start_bin": 1169,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T01:25:00+01:00",
+    "end_time": "2036-01-11T02:10:00+01:00",
+    "start_bin": 1169,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-11T09:10:00+01:00",
+    "end_time": "2036-01-11T09:25:00+01:00",
+    "start_bin": 1262,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T09:25:00+01:00",
+    "end_time": "2036-01-11T10:10:00+01:00",
+    "start_bin": 1265,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-11T10:25:00+01:00",
+    "end_time": "2036-01-11T10:40:00+01:00",
+    "start_bin": 1277,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T10:40:00+01:00",
+    "end_time": "2036-01-11T11:25:00+01:00",
+    "start_bin": 1280,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-11T11:55:00+01:00",
+    "end_time": "2036-01-11T12:10:00+01:00",
+    "start_bin": 1295,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T12:10:00+01:00",
+    "end_time": "2036-01-11T12:55:00+01:00",
+    "start_bin": 1298,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T12:10:00+01:00",
+    "end_time": "2036-01-11T12:55:00+01:00",
+    "start_bin": 1298,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-11T14:10:00+01:00",
+    "end_time": "2036-01-11T14:25:00+01:00",
+    "start_bin": 1322,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-11T18:00:00+01:00",
+    "end_time": "2036-01-11T18:15:00+01:00",
+    "start_bin": 1368,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-11T18:10:00+01:00",
+    "end_time": "2036-01-11T18:25:00+01:00",
+    "start_bin": 1370,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T18:25:00+01:00",
+    "end_time": "2036-01-11T19:10:00+01:00",
+    "start_bin": 1373,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T18:25:00+01:00",
+    "end_time": "2036-01-11T19:10:00+01:00",
+    "start_bin": 1373,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-11T19:10:00+01:00",
+    "end_time": "2036-01-11T19:25:00+01:00",
+    "start_bin": 1382,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Clean",
+    "start_time": "2036-01-11T19:50:00+01:00",
+    "end_time": "2036-01-11T20:35:00+01:00",
+    "start_bin": 1390,
+    "duration_bins": 9
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-12T18:00:00+01:00",
+    "end_time": "2036-01-12T18:15:00+01:00",
+    "start_bin": 1656,
+    "duration_bins": 3
+  },
+  {
+    "database_id": "nexus_10y",
+    "robot_id": "nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x",
+    "task_type": "Assist",
+    "start_time": "2036-01-12T18:25:00+01:00",
+    "end_time": "2036-01-12T18:40:00+01:00",
+    "start_bin": 1661,
+    "duration_bins": 3
+  }
+]

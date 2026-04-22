@@ -1,0 +1,21 @@
+models:
+  temporal:
+    architecture: direct_day_time
+    hidden_size: 192
+    num_layers: 2
+    num_heads: 4
+    dropout: 0.25
+    task_embed_dim: 32
+    database_embed_dim: 16
+    robot_embed_dim: 16
+    slot_embed_dim: 24
+    day_embed_dim: 8
+    time_embed_dim: 16
+    inference_topk_days: 4
+    inference_topk_times: 18
+    solver_candidates: 32
+    day_loss_weight: 0.80
+    time_loss_weight: 1.00
+    duration_loss_weight: 0.20
+    day_label_smoothing: 0.02
+    time_label_smoothing: 0.01

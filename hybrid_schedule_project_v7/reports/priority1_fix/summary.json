@@ -1,0 +1,78 @@
+{
+  "profile": {
+    "num_events": 32732,
+    "num_databases": 1,
+    "num_robots": 1,
+    "num_tasks": 4,
+    "tasks": [
+      "Assist",
+      "Clean",
+      "Delivery",
+      "Patroll"
+    ],
+    "date_min": "2026-01-05 09:00:00+01:00",
+    "date_max": "2036-01-05 00:25:00+01:00",
+    "num_weeks": 522,
+    "duration_minutes_min": 10.0,
+    "duration_minutes_median": 25.0,
+    "duration_minutes_max": 45.0,
+    "weekly_tasks_mean": 62.70498084291188,
+    "weekly_tasks_std": 16.668529028694717,
+    "overlap_same_robot_count": 0,
+    "overlap_breakdown": {
+      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 0
+    },
+    "by_database": {
+      "nexus_10y": {
+        "events": 32732,
+        "robots": 1,
+        "weeks": 522,
+        "tasks": [
+          "Assist",
+          "Clean",
+          "Delivery",
+          "Patroll"
+        ],
+        "weekly_mean": 62.70498084291188,
+        "duration_median": 25.0
+      }
+    }
+  },
+  "occurrence": {
+    "change_acc": 95.4326923076923,
+    "close_acc_1": 57.21153846153846,
+    "close_acc_2": 78.125,
+    "count_exact_acc": 27.16346153846154,
+    "count_mae": 1.5721153846153846,
+    "expected_count_mae": 1.3592600180552556,
+    "selection_score": 38.71680608162513
+  },
+  "temporal": {
+    "candidate_oracle_10m": 87.84975853279559,
+    "candidate_oracle_5m": 84.67153476102509,
+    "duration_mae_minutes": 0.0,
+    "start_exact_acc": 38.09306681373694,
+    "start_mae_minutes": 108.44206483259688,
+    "start_tol_10m": 49.467763000161106,
+    "start_tol_5m": 42.335767772075904,
+    "selection_score": 58.394284085548705
+  },
+  "backtest": {
+    "task_precision": 92.69076346483926,
+    "task_recall": 84.13926100726441,
+    "task_f1": 87.69584681651922,
+    "time_exact_accuracy": 32.62002048890586,
+    "time_close_accuracy_5m": 34.21677536026179,
+    "time_close_accuracy_10m": 37.5810842919603,
+    "duration_close_accuracy": 100.0,
+    "start_mae_minutes": 482.28196767282543,
+    "overlap_same_robot_count": 0.375,
+    "predicted_tasks": 57.833333333333336,
+    "true_tasks": 62.333333333333336,
+    "matched_tasks": 54.083333333333336
+  },
+  "artifacts": {
+    "occurrence_checkpoint": "/home/miguel/Escritorio/prediction_deliverance/hybrid_schedule_project_v4/reports/priority1_fix/occurrence_model.pt",
+    "temporal_checkpoint": "/home/miguel/Escritorio/prediction_deliverance/hybrid_schedule_project_v4/reports/priority1_fix/temporal_model.pt"
+  }
+}
