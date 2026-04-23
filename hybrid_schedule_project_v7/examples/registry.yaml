@@ -1,7 +1,7 @@
 datasets:
   - database_id: robot_5y
     source_type: json
-    path: ../bases_datos/nexus_schedule_10years.json
+    path: ../bases_datos/robot_schedule_5years.json
     timezone: Europe/Madrid
     task_field: type
     robot_field: device_uid

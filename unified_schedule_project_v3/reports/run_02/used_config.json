@@ -1,0 +1,72 @@
+{
+  "seed": 42,
+  "calendar": {
+    "timezone_default": "Europe/Madrid",
+    "bin_minutes": 5,
+    "window_weeks": 16,
+    "min_history_weeks": 24,
+    "max_slot_prototypes": 12
+  },
+  "splits": {
+    "train_ratio": 0.8
+  },
+  "models": {
+    "unified": {
+      "hidden_size": 256,
+      "history_layers": 2,
+      "history_heads": 8,
+      "query_layers": 3,
+      "query_heads": 8,
+      "cross_layers": 2,
+      "dropout": 0.2,
+      "task_embed_dim": 48,
+      "database_embed_dim": 24,
+      "robot_embed_dim": 24,
+      "slot_embed_dim": 24,
+      "day_embed_dim": 12,
+      "time_embed_dim": 24,
+      "numeric_hidden_dim": 192,
+      "active_temperature": 1.0
+    }
+  },
+  "training": {
+    "batch_size": 8,
+    "lr": 0.00025,
+    "weight_decay": 0.0005,
+    "epochs": 120,
+    "patience": 16,
+    "amp": false,
+    "num_workers": 0,
+    "grad_clip_norm": 1.0,
+    "pos_weight_active": 5.0,
+    "active_loss_weight": 1.0,
+    "day_loss_weight": 0.7,
+    "time_loss_weight": 1.0,
+    "duration_loss_weight": 0.2,
+    "count_consistency_weight": 0.35,
+    "day_label_smoothing": 0.01,
+    "time_label_smoothing": 0.01,
+    "use_lr_scheduler": true,
+    "lr_scheduler_factor": 0.5,
+    "lr_scheduler_patience": 5,
+    "lr_scheduler_min_lr": 1e-05,
+    "lr_scheduler_threshold": 0.001
+  },
+  "inference": {
+    "active_threshold": 0.42,
+    "min_keep_prob": 0.2,
+    "topk_days": 3,
+    "topk_times": 12,
+    "max_selected_slots_per_task": 12,
+    "duration_radius_bins": 1,
+    "beam_width": 6,
+    "max_candidates_per_event": 18,
+    "anchor_penalty": 0.1,
+    "duration_penalty": 0.05,
+    "occupancy_soft_penalty": 5.0
+  },
+  "reporting": {
+    "save_csv": true,
+    "save_epoch_jsonl": true
+  }
+}

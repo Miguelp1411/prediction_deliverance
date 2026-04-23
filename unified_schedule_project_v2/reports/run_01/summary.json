@@ -1,0 +1,75 @@
+{
+  "profile": {
+    "num_events": 32732,
+    "num_databases": 1,
+    "num_robots": 1,
+    "num_tasks": 4,
+    "tasks": [
+      "Assist",
+      "Clean",
+      "Delivery",
+      "Patroll"
+    ],
+    "date_min": "2026-01-05 09:00:00+01:00",
+    "date_max": "2036-01-05 00:25:00+01:00",
+    "num_weeks": 522,
+    "duration_minutes_min": 10.0,
+    "duration_minutes_median": 25.0,
+    "duration_minutes_max": 45.0,
+    "weekly_tasks_mean": 62.70498084291188,
+    "weekly_tasks_std": 16.668529028694717,
+    "overlap_same_robot_count": 0,
+    "overlap_breakdown": {
+      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 0
+    },
+    "by_database": {
+      "nexus_10y": {
+        "events": 32732,
+        "robots": 1,
+        "weeks": 522,
+        "tasks": [
+          "Assist",
+          "Clean",
+          "Delivery",
+          "Patroll"
+        ],
+        "weekly_mean": 62.70498084291188,
+        "duration_median": 25.0
+      }
+    }
+  },
+  "training": {
+    "best_epoch": 76,
+    "best_val_loss": 3.887867835851816
+  },
+  "validation": {
+    "active_f1": 98.26669776943768,
+    "active_precision": 97.9432394016192,
+    "active_recall": 98.59810080942484,
+    "count_mae": 5.895015423114483,
+    "day_acc": 88.64406714072594,
+    "duration_mae_minutes": 1.2323614324514682,
+    "loss": 3.887867835851816,
+    "loss_active": 0.22030563595203254,
+    "loss_count": 5.895015423114483,
+    "loss_day": 0.3873842335664309,
+    "loss_duration": 0.0032246073600477898,
+    "loss_time": 1.3324929934281569,
+    "start_mae_minutes": 265.93820131742035,
+    "start_tol_5m": 65.37233499380258
+  },
+  "backtest": {
+    "task_precision": 98.22351098635609,
+    "task_recall": 67.51784170375758,
+    "task_f1": 79.3434543693423,
+    "time_exact_accuracy": 75.7997969867878,
+    "time_close_accuracy_5m": 76.25729666303747,
+    "time_close_accuracy_10m": 76.81675639190509,
+    "duration_close_accuracy": 96.51772008634411,
+    "start_mae_minutes": 131.25960904431085,
+    "overlap_same_robot_count": 0.375,
+    "predicted_tasks": 40.5,
+    "true_tasks": 62.333333333333336,
+    "matched_tasks": 39.875
+  }
+}
