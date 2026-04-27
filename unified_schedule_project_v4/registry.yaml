@@ -1,0 +1,10 @@
+datasets:
+  - database_id: nexus_10y
+    source_type: json
+    path: /home/miguel/Descargas/unified_schedule_project_v3/bases_datos/nexus_schedule_10years.json
+    timezone: Europe/Madrid
+    task_field: type
+    robot_field: device_uid
+    start_field: start_time
+    end_field: end_time
+    event_id_field: uid

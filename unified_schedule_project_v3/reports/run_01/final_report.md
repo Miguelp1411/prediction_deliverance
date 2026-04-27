@@ -10,23 +10,23 @@
 
 ## Validación del modelo unificado
 
-- best_epoch: **76**
-- best_val_loss: **3.887867835851816**
-- val active_f1: **98.27%**
-- val count_mae: **5.895**
-- val day_acc: **88.64%**
-- val start_tol_5m: **65.37%**
-- val start_mae_minutes: **265.94 min**
-- val duration_mae_minutes: **1.23 min**
+- best_epoch: **87**
+- best_val_loss: **2.421086696478037**
+- val active_f1: **90.44%**
+- val count_mae: **0.989**
+- val day_acc: **94.20%**
+- val start_tol_5m: **67.28%**
+- val start_mae_minutes: **112.54 min**
+- val duration_mae_minutes: **1.54 min**
 
 ## Weekly backtest
 
-- task_f1: **79.34%**
-- time_exact_accuracy: **75.80%**
-- time_close_accuracy_5m: **76.26%**
-- time_close_accuracy_10m: **76.82%**
-- start_mae_minutes: **131.26 min**
-- overlap_same_robot_count: **0**
+- task_f1: **95.42%**
+- time_exact_accuracy: **75.76%**
+- time_close_accuracy_5m: **76.07%**
+- time_close_accuracy_10m: **77.16%**
+- start_mae_minutes: **138.67 min**
+- overlap_same_robot_count: **5**
 
 ## Interpretación
 
