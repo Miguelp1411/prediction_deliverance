@@ -247,7 +247,11 @@ def main() -> None:
             min_lr=float(cfg['training'].get('lr_scheduler_min_lr', 1.0e-5)),
         )
 
-    logger = RunLogger(output_dir)
+    logger = RunLogger(
+        output_dir,
+        save_epoch_jsonl=bool(cfg['reporting'].get('save_epoch_jsonl', True)),
+        reset_epoch_jsonl=True,
+    )
     model_fit_started_at = time.perf_counter()
     fit_info = fit_unified_model(
         model=model,

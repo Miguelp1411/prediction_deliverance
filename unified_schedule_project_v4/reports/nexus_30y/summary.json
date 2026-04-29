@@ -1,0 +1,88 @@
+{
+  "profile": {
+    "num_events": 98195,
+    "num_databases": 1,
+    "num_robots": 1,
+    "num_tasks": 4,
+    "tasks": [
+      "Assist",
+      "Clean",
+      "Delivery",
+      "Patroll"
+    ],
+    "date_min": "2026-01-05 09:00:00+01:00",
+    "date_max": "2056-01-05 00:25:00+01:00",
+    "num_weeks": 1566,
+    "duration_minutes_min": 10.0,
+    "duration_minutes_median": 25.0,
+    "duration_minutes_max": 1485.0,
+    "weekly_tasks_mean": 62.70434227330779,
+    "weekly_tasks_std": 16.124478057729863,
+    "overlap_same_robot_count": 14,
+    "overlap_breakdown": {
+      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 14
+    },
+    "by_database": {
+      "nexus_10y": {
+        "events": 98195,
+        "robots": 1,
+        "weeks": 1566,
+        "tasks": [
+          "Assist",
+          "Clean",
+          "Delivery",
+          "Patroll"
+        ],
+        "weekly_mean": 62.70434227330779,
+        "duration_median": 25.0
+      }
+    }
+  },
+  "training": {
+    "best_epoch": 101,
+    "best_val_loss": 3.639736092090607,
+    "best_monitor_name": "composite",
+    "best_monitor_score": 56.45027478918827,
+    "epochs_ran": 117,
+    "data_preparation_seconds": 188.21888835400023,
+    "model_fit_seconds": 637.9460085359997,
+    "total_process_seconds": 831.7088444129995
+  },
+  "validation": {
+    "active_f1": 88.09704482016349,
+    "active_precision": 86.9649309399906,
+    "active_recall": 89.91736301331933,
+    "count_mae": 1.331170716881752,
+    "day_acc": 92.0697221159935,
+    "duration_mae_minutes": 1.3349842140451074,
+    "loss": 3.639736092090607,
+    "loss_active": 0.8405841574072838,
+    "loss_count": 1.331170716881752,
+    "loss_day": 0.32728646472096445,
+    "loss_duration": 0.003932435119349975,
+    "loss_time": 1.5306968741118907,
+    "loss_week_time": 1.634049127995968,
+    "start_mae_minutes": 140.81294679641724,
+    "start_tol_5m": 66.7509026825428,
+    "monitor_score": 56.45027478918827
+  },
+  "backtest": {
+    "task_precision": 92.36357790738127,
+    "task_recall": 98.36840962704736,
+    "task_f1": 94.71705641441947,
+    "time_exact_accuracy": 78.57621652870593,
+    "time_close_accuracy_5m": 78.80628818119136,
+    "time_close_accuracy_10m": 79.17756260170638,
+    "duration_close_accuracy": 97.55842467440208,
+    "start_mae_minutes": 116.78283340156304,
+    "overlap_same_robot_count": 5.083333333333333,
+    "predicted_tasks": 66.16666666666667,
+    "true_tasks": 61.666666666666664,
+    "matched_tasks": 60.791666666666664
+  },
+  "timings": {
+    "data_preparation_seconds": 188.21888835400023,
+    "model_fit_seconds": 637.9460085359997,
+    "total_process_seconds": 831.7088444129995
+  }
+}

@@ -34,7 +34,7 @@ training:
   batch_size: 8
   lr: 0.00025
   weight_decay: 0.0005
-  epochs: 120
+  epochs: 400
   patience: 16
   amp: false
   num_workers: 0
@@ -54,12 +54,9 @@ training:
   monitor_metric: composite
   monitor_mode: max
   monitor_weights:
-    active_f1: 0.35
-    start_tol_5m: 0.35
-    day_acc: 0.10
-    start_mae_minutes: -0.03
-    duration_mae_minutes: -0.05
-    count_mae: -2.00
+    event_start_recall_at_true_count_5m: 0.60
+    task_day_count_exact_acc: 0.20
+    active_f1: 0.20
 
  
   use_lr_scheduler: true

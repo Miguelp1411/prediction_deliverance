@@ -7,14 +7,34 @@ from typing import Any
 
 
 class RunLogger:
-    def __init__(self, output_dir: str | Path):
+    def __init__(
+        self,
+        output_dir: str | Path,
+        *,
+        save_epoch_jsonl: bool = True,
+        reset_epoch_jsonl: bool = True,
+    ):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.rows: list[dict[str, Any]] = []
         self.jsonl_path = self.output_dir / 'epoch_metrics.jsonl'
+        self.save_epoch_jsonl = bool(save_epoch_jsonl)
+
+        # Importante:
+        # Limpiamos el jsonl al iniciar una nueva ejecución.
+        # Después log_epoch seguirá usando append, pero solo dentro de esta ejecución.
+        if reset_epoch_jsonl:
+            if self.save_epoch_jsonl:
+                self.jsonl_path.write_text('', encoding='utf-8')
+            elif self.jsonl_path.exists():
+                self.jsonl_path.unlink()
 
     def log_epoch(self, payload: dict[str, Any]) -> None:
         self.rows.append(dict(payload))
+
+        if not self.save_epoch_jsonl:
+            return
+
         with self.jsonl_path.open('a', encoding='utf-8') as f:
             f.write(json.dumps(payload, ensure_ascii=False) + '\n')
 

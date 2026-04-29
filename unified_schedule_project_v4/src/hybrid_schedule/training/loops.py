@@ -6,6 +6,7 @@ from typing import Any
 import torch
 
 from hybrid_schedule.evaluation.metrics import unified_slot_metrics
+from hybrid_schedule.utils.progress import TerminalLiveBlock
 from .losses import unified_slot_loss
 
 
@@ -32,29 +33,31 @@ def _fmt_metric(value: float | None, suffix: str = '') -> str:
     return f'{float(value):.4f}{suffix}'
 
 
-def _print_epoch_metrics(epoch: int, epochs: int, train_mean: dict[str, float], val_mean: dict[str, float]) -> None:
+def _epoch_metrics_message(
+    epoch: int,
+    epochs: int,
+    train_mean: dict[str, float],
+    val_mean: dict[str, float],
+) -> str:
     train_loss = train_mean.get('loss')
     val_loss = val_mean.get('loss')
     train_f1 = train_mean.get('active_f1')
     val_f1 = val_mean.get('active_f1')
+    train_5m = train_mean.get('start_tol_5m')
+    val_5m = val_mean.get('start_tol_5m')
     train_count_mae = train_mean.get('count_mae')
     val_count_mae = val_mean.get('count_mae')
     train_start_mae = train_mean.get('start_mae_minutes')
     val_start_mae = val_mean.get('start_mae_minutes')
 
-    print(
-        '[entrenamiento] '
-        f'Época {epoch}/{epochs} | '
-        f'train_loss={_fmt_metric(train_loss)} | '
-        f'val_loss={_fmt_metric(val_loss)} | '
-        f'train_active_f1={_fmt_metric(train_f1, "%")} | '
-        f'val_active_f1={_fmt_metric(val_f1, "%")} | '
-        f'train_count_mae={_fmt_metric(train_count_mae)} | '
-        f'val_count_mae={_fmt_metric(val_count_mae)} | '
-        f'train_start_mae={_fmt_metric(train_start_mae, " min")} | '
-        f'val_start_mae={_fmt_metric(val_start_mae, " min")}',
-        flush=True,
-    )
+    return '\n'.join([
+        f'[entrenamiento] Época {epoch}/{epochs}',
+        f'  loss: train= {_fmt_metric(train_loss)} | val={_fmt_metric(val_loss)}',
+        f'  active_f1: train={_fmt_metric(train_f1, "%")} | val= {_fmt_metric(val_f1, "%")}',
+        f'  start_5min: train= {_fmt_metric(train_5m, "%")} | val= {_fmt_metric(val_5m, "%")}',
+        f'  count_mae: train= {_fmt_metric(train_count_mae)} | val= {_fmt_metric(val_count_mae)}',
+        f'  start_mae: train= {_fmt_metric(train_start_mae, " min")} | val= {_fmt_metric(val_start_mae, " min")}',
+    ])
 
 
 def _monitor_score(
@@ -127,6 +130,7 @@ def fit_unified_model(
     best_epoch = -1
     epochs_without_improve = 0
     epochs_ran = 0
+    progress_block = TerminalLiveBlock(enabled=int(print_interval) > 0)
 
     for epoch in range(1, int(epochs) + 1):
         epochs_ran = epoch
@@ -198,7 +202,17 @@ def fit_unified_model(
 
         interval = max(1, int(print_interval))
         if epoch % interval == 0 or epoch == int(epochs):
-            _print_epoch_metrics(epoch, int(epochs), train_mean, val_mean)
+            progress_block.update(
+                _epoch_metrics_message(
+                    epoch,
+                    int(epochs),
+                    train_mean,
+                    val_mean,
+                )
+            )
+
+            if epoch == int(epochs):
+                progress_block.finish()
 
         if _is_better(score, best_metric, mode):
             best_metric = score
@@ -210,6 +224,7 @@ def fit_unified_model(
         else:
             epochs_without_improve += 1
             if epochs_without_improve >= int(patience):
+                progress_block.finish()
                 print(
                     f'[entrenamiento] Early stopping en época {epoch}: '
                     f'sin mejora durante {int(patience)} épocas. '
@@ -220,6 +235,7 @@ def fit_unified_model(
                 )
                 break
 
+    progress_block.finish()
     model.load_state_dict(best_state)
     return {
         'best_epoch': int(best_epoch),

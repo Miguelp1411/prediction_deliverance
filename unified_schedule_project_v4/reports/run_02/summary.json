@@ -1,6 +1,6 @@
 {
   "profile": {
-    "num_events": 16368,
+    "num_events": 98195,
     "num_databases": 1,
     "num_robots": 1,
     "num_tasks": 4,
@@ -11,78 +11,78 @@
       "Patroll"
     ],
     "date_min": "2026-01-05 09:00:00+01:00",
-    "date_max": "2031-01-04 18:00:00+01:00",
-    "num_weeks": 261,
+    "date_max": "2056-01-05 00:25:00+01:00",
+    "num_weeks": 1566,
     "duration_minutes_min": 10.0,
     "duration_minutes_median": 25.0,
-    "duration_minutes_max": 45.0,
-    "weekly_tasks_mean": 62.71264367816092,
-    "weekly_tasks_std": 16.719800361784557,
-    "overlap_same_robot_count": 0,
+    "duration_minutes_max": 1485.0,
+    "weekly_tasks_mean": 62.70434227330779,
+    "weekly_tasks_std": 16.124478057729863,
+    "overlap_same_robot_count": 14,
     "overlap_breakdown": {
-      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 0
+      "nexus_10y::nexus-r0b0t-0001-4aaa-8bbb-c0mplex001x": 14
     },
     "by_database": {
       "nexus_10y": {
-        "events": 16368,
+        "events": 98195,
         "robots": 1,
-        "weeks": 261,
+        "weeks": 1566,
         "tasks": [
           "Assist",
           "Clean",
           "Delivery",
           "Patroll"
         ],
-        "weekly_mean": 62.71264367816092,
+        "weekly_mean": 62.70434227330779,
         "duration_median": 25.0
       }
     }
   },
   "training": {
-    "best_epoch": 118,
-    "best_val_loss": 4.931566306522915,
+    "best_epoch": 110,
+    "best_val_loss": 4.139825832843781,
     "best_monitor_name": "composite",
-    "best_monitor_score": 47.2462268841164,
-    "epochs_ran": 120,
-    "data_preparation_seconds": 30.20638212400081,
-    "model_fit_seconds": 1245.6744813179976,
-    "total_process_seconds": 1283.3394768119979
+    "best_monitor_score": 54.5220297780303,
+    "epochs_ran": 126,
+    "data_preparation_seconds": 209.9838955119999,
+    "model_fit_seconds": 733.726047908,
+    "total_process_seconds": 950.8895194970005
   },
   "validation": {
-    "active_f1": 83.84460862653098,
-    "active_precision": 83.74622738184965,
-    "active_recall": 83.96131452592465,
-    "count_mae": 1.9338188001087733,
-    "day_acc": 88.09109585625785,
-    "duration_mae_minutes": 4.206777044704983,
-    "loss": 4.931566306522915,
-    "loss_active": 1.1139990431921822,
-    "loss_count": 1.9338188001087733,
-    "loss_day": 0.38217231205531527,
-    "loss_duration": 0.013567280556474413,
-    "loss_time": 2.205845969063895,
-    "loss_week_time": 2.183677911758423,
-    "start_mae_minutes": 181.64074352809362,
-    "start_tol_5m": 53.196294392858235,
-    "monitor_score": 47.2462268841164
+    "active_f1": 87.51414938479815,
+    "active_precision": 86.64813084682194,
+    "active_recall": 89.05477691528702,
+    "count_mae": 1.3652584359049798,
+    "day_acc": 91.0783614218235,
+    "duration_mae_minutes": 1.8285638485103846,
+    "loss": 4.139825832843781,
+    "loss_active": 0.9575572729110717,
+    "loss_count": 1.3652584359049798,
+    "loss_day": 0.37986776102334263,
+    "loss_duration": 0.006706025468884036,
+    "loss_time": 1.7059140548110008,
+    "loss_week_time": 1.9049420721828938,
+    "start_mae_minutes": 165.4579485654831,
+    "start_tol_5m": 64.48549963533878,
+    "monitor_score": 54.5220297780303
   },
   "backtest": {
-    "task_precision": 90.2260840027394,
-    "task_recall": 95.43818514538982,
-    "task_f1": 92.61679018257196,
-    "time_exact_accuracy": 67.61344136373359,
-    "time_close_accuracy_5m": 68.12829029665306,
-    "time_close_accuracy_10m": 69.17750922824821,
-    "duration_close_accuracy": 83.8292989330006,
-    "start_mae_minutes": 188.70105616170076,
-    "overlap_same_robot_count": 3.0833333333333335,
+    "task_precision": 93.00715906208882,
+    "task_recall": 98.43634982036087,
+    "task_f1": 95.09235393339827,
+    "time_exact_accuracy": 75.7531294824384,
+    "time_close_accuracy_5m": 75.86001946065191,
+    "time_close_accuracy_10m": 76.46809169015914,
+    "duration_close_accuracy": 94.71589256589347,
+    "start_mae_minutes": 142.23832421203196,
+    "overlap_same_robot_count": 6.416666666666667,
     "predicted_tasks": 66.04166666666667,
-    "true_tasks": 62.333333333333336,
-    "matched_tasks": 59.833333333333336
+    "true_tasks": 61.666666666666664,
+    "matched_tasks": 60.916666666666664
   },
   "timings": {
-    "data_preparation_seconds": 30.20638212400081,
-    "model_fit_seconds": 1245.6744813179976,
-    "total_process_seconds": 1283.3394768119979
+    "data_preparation_seconds": 209.9838955119999,
+    "model_fit_seconds": 733.726047908,
+    "total_process_seconds": 950.8895194970005
   }
 }

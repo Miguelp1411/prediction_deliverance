@@ -3,8 +3,8 @@
   "calendar": {
     "timezone_default": "Europe/Madrid",
     "bin_minutes": 5,
-    "window_weeks": 16,
-    "min_history_weeks": 24,
+    "window_weeks": 52,
+    "min_history_weeks": 52,
     "max_slot_prototypes": 39,
     "max_slots_by_task": [
       28,
@@ -40,7 +40,7 @@
     "batch_size": 8,
     "lr": 0.00025,
     "weight_decay": 0.0005,
-    "epochs": 120,
+    "epochs": 400,
     "patience": 16,
     "amp": false,
     "num_workers": 0,
